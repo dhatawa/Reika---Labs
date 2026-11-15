@@ -1,0 +1,186 @@
+@import '@fontsource/tenor-sans/400.css';
+@import '@fontsource-variable/manrope/index.css';
+@import '@fontsource-variable/jetbrains-mono/index.css';
+@import 'tailwindcss';
+
+/* ─────────────────────────────────────────────────────────────
+   REIKA LABS — DESIGN TOKENS
+   Water palette: Midnight Navy → Deep Ocean → Aqua → Cyan, on Soft White.
+   ───────────────────────────────────────────────────────────── */
+@theme {
+  --color-midnight: #060d1c;
+  --color-abyss: #0a1730;
+  --color-ocean: #0c2f55;
+  --color-ocean-2: #12507e;
+  --color-aqua: #2fb6c9;
+  --color-cyan: #8ae7f2;
+  --color-foam: #f3f6f7;
+  --color-paper: #eef2f3;
+  --color-ink: #0a1426;
+  --color-mist: #8fa3b8;
+
+  --font-display: 'Tenor Sans', 'Optima', 'Candara', ui-sans-serif, sans-serif;
+  --font-sans: 'Manrope Variable', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-mono: 'JetBrains Mono Variable', ui-monospace, 'SFMono-Regular', Menlo, monospace;
+
+  --ease-water: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    scroll-padding-top: 5rem;
+    -webkit-text-size-adjust: 100%;
+    text-rendering: optimizeLegibility;
+  }
+
+  body {
+    @apply bg-midnight text-foam font-sans antialiased;
+    font-feature-settings: 'ss01', 'cv11';
+  }
+
+  ::selection {
+    background: var(--color-cyan);
+    color: var(--color-ink);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-cyan);
+    outline-offset: 3px;
+    border-radius: 2px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.001ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.001ms !important;
+    }
+  }
+}
+
+@layer components {
+  /* Small, quiet lab metadata labels */
+  .label {
+    @apply font-mono text-[0.6875rem] uppercase tracking-[0.18em];
+  }
+
+  .container-x {
+    @apply mx-auto w-full max-w-[90rem] px-5 sm:px-8 lg:px-14;
+  }
+
+  /* Hairline rule */
+  .rule {
+    @apply h-px w-full bg-current opacity-15;
+  }
+}
+
+/* ── Water fallback (no WebGL) — animated fluid gradient ──────── */
+.water-fallback {
+  background:
+    radial-gradient(60% 50% at 20% 25%, rgb(47 182 201 / 0.28), transparent 70%),
+    radial-gradient(50% 60% at 80% 30%, rgb(18 80 126 / 0.55), transparent 70%),
+    radial-gradient(70% 60% at 50% 100%, rgb(12 47 85 / 0.9), transparent 70%),
+    linear-gradient(180deg, #0a1f3c 0%, #060d1c 100%);
+  background-size: 160% 160%, 180% 180%, 140% 140%, 100% 100%;
+  animation: water-drift 22s ease-in-out infinite alternate;
+}
+
+@keyframes water-drift {
+  0% {
+    background-position: 0% 0%, 100% 0%, 50% 100%, 0 0;
+  }
+  100% {
+    background-position: 30% 20%, 70% 30%, 40% 80%, 0 0;
+  }
+}
+
+/* ── Section wave divider ─────────────────────────────────────── */
+.wave-track {
+  animation: wave-slide 18s linear infinite;
+}
+.wave-track-slow {
+  animation: wave-slide 28s linear infinite reverse;
+}
+@keyframes wave-slide {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+
+/* ── Smart Gate illustration motion ───────────────────────────── */
+.flow-line {
+  stroke-dasharray: 6 14;
+  animation: flow 2.4s linear infinite;
+}
+@keyframes flow {
+  to {
+    stroke-dashoffset: -40;
+  }
+}
+.signal {
+  animation: signal 2.8s var(--ease-water) infinite;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+@keyframes signal {
+  0% {
+    opacity: 0;
+    transform: scale(0.6);
+  }
+  30% {
+    opacity: 0.9;
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.5);
+  }
+}
+.bob {
+  animation: bob 5s ease-in-out infinite;
+}
+@keyframes bob {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(3px);
+  }
+}
+
+/* ── REIKA acrostic: outlined letters that fill with water on hover ── */
+.water-letter {
+  --fill: var(--color-ocean-2);
+  color: transparent;
+  -webkit-text-stroke: 1px rgb(10 20 38 / 0.55);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 400' preserveAspectRatio='none'%3E%3Cpath d='M0 200 C 25 188, 50 188, 75 198 S 125 212, 150 200 S 190 190, 200 200 V400 H0 Z' fill='%2312507e'/%3E%3C/svg%3E");
+  background-repeat: repeat-x;
+  background-size: 1.4em 200%;
+  background-position-x: 0;
+  background-position-y: 22%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  transition:
+    background-position-y 1.1s var(--ease-water),
+    -webkit-text-stroke-color 0.6s ease;
+  animation: letter-wave 4s linear infinite;
+}
+.group:hover .water-letter,
+.water-letter.is-full {
+  background-position-y: 100%;
+  -webkit-text-stroke-color: rgb(18 80 126 / 0.9);
+}
+@keyframes letter-wave {
+  to {
+    background-position-x: 1.4em;
+  }
+}
