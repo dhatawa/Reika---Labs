@@ -119,17 +119,21 @@ void main() {
   vec2 warp = (q - 0.5) * 1.4;
   float e1 = cellEdge(p * 2.6 + warp, t * 0.55);
   float e2 = cellEdge(p * 4.4 - warp * 0.8 + 3.1, t * 0.7);
-  float caustic = (1.0 - smoothstep(0.0, 0.16, e1)) * 0.7 + (1.0 - smoothstep(0.0, 0.11, e2)) * 0.35;
-  caustic *= 0.55 + 0.45 * body;
-  col += uLight * caustic * uCaustic * (0.05 + 0.32 * depth * depth);
+  // Soft, broken light rather than a crisp web: wide falloff, squared,
+  // and faded by the current so it never reads as a mesh.
+  float c1 = 1.0 - smoothstep(0.0, 0.32, e1);
+  float c2 = 1.0 - smoothstep(0.0, 0.22, e2);
+  float caustic = c1 * c1 * 0.6 + c2 * c2 * 0.3;
+  caustic *= smoothstep(0.2, 0.75, body);
+  col += uLight * caustic * uCaustic * (0.04 + 0.3 * depth * depth);
 
   // ── Light shafts from the surface ──────────────────────
   float rays = fbm(vec2(uv.x * 4.0 - uv.y * 1.4 + 0.3, t * 0.035));
   rays = smoothstep(0.5, 0.92, rays) * smoothstep(0.25, 1.0, uv.y);
-  col += uLight * rays * 0.12 * uCaustic;
+  col += uLight * rays * 0.08 * uCaustic;
 
   // ── Ripple glints + pointer glow ───────────────────────
-  col += uLight * hi * 0.22;
+  col += uLight * hi * 0.18;
   vec2 pd = (uv - uPointer) * vec2(aspect, 1.0);
   col += uLight * 0.045 * exp(-dot(pd, pd) * 7.0) * uPointerOn;
 

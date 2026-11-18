@@ -5,8 +5,9 @@ import tailwindcss from '@tailwindcss/vite'
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react(), tailwindcss()],
-  // Relative base so the build works on Vercel, Netlify, GitHub Pages or any sub-folder.
-  base: './',
+  // Absolute base: required for clean multi-page URLs (/about/logo must still find /assets).
+  // A static preview build can override it: VITE_BASE=./ VITE_ROUTER=hash npm run build
+  base: process.env.VITE_BASE ?? '/',
   build: {
     target: 'es2020',
     cssCodeSplit: true,

@@ -2,7 +2,7 @@
 
 **Research, Engineering, Innovation, Knowledge, Action.**
 
-Website company profile single-page untuk Reika Labs: hero dengan simulasi air WebGL yang bereaksi terhadap cursor/sentuhan, section About dengan filosofi REIKA, Members, Products & Research (Smart Gate), dan Contact.
+Website multi-halaman untuk Reika Labs: hero dengan simulasi air WebGL yang bereaksi terhadap cursor/sentuhan, section About dengan filosofi REIKA, Members, Products & Research (Smart Gate), dan Contact.
 
 ---
 
@@ -25,9 +25,10 @@ Website company profile single-page untuk Reika Labs: hero dengan simulasi air W
 
 | Kebutuhan | Pilihan | Alasan |
 |---|---|---|
-| Framework | **React 19 + Vite + TypeScript** | Single-page tanpa routing atau server → Vite lebih ringan dan cepat daripada Next.js. |
+| Framework | **React 19 + Vite + TypeScript** | Ringan dan cepat; tidak butuh server. |
+| Routing | **React Router DOM 7** | 14 halaman dengan URL sendiri (lihat `src/router.tsx`). |
 | Styling | **Tailwind CSS v4** | Design token di satu file (`src/styles/index.css`). |
-| Animasi | **Motion** (Framer Motion) | Reveal, parallax, modal, menu mobile. Otomatis menghormati `prefers-reduced-motion`. |
+| Animasi | **Motion** (Framer Motion) | Animasi masuk hero, modal, menu mobile. Otomatis menghormati `prefers-reduced-motion`. |
 | Efek air | **WebGL murni (shader custom)** | Tanpa Three.js — satu shader fullscreen jauh lebih ringan (~0 KB library tambahan). |
 | Ikon | **Lucide** | Hanya ikon fungsional (panah, menu, tutup). |
 | Font | **Fontsource** (self-hosted) | Tenor Sans (display), Manrope (teks), JetBrains Mono (label). Tidak bergantung CDN Google Fonts. |
@@ -43,24 +44,30 @@ reika-labs/
 ├── public/
 │   ├── members/                 ← FOTO ANGGOTA DI SINI
 │   │   └── README.md
-│   ├── brand/reika-mark.svg     ← logo mark (SVG)
-│   ├── favicon.svg
+│   ├── brand/                   ← logo resmi (PNG transparan)
+│   ├── favicon-32.png, apple-touch-icon.png
 │   ├── og-image.jpg             ← gambar preview saat link dibagikan
 │   └── robots.txt
 ├── src/
+│   ├── router.tsx               ← DAFTAR SEMUA HALAMAN (URL)
+│   ├── pages/index.tsx          ← halaman-halaman (merangkai section)
 │   ├── content/
-│   │   └── site.ts              ← SEMUA TEKS & DATA ADA DI SINI
+│   │   ├── en.ts                ← SEMUA TEKS — English
+│   │   ├── id.ts                ← SEMUA TEKS — Bahasa Indonesia
+│   │   ├── types.ts             ← bentuk data bersama
+│   │   └── site.ts              ← pintu masuk (useSite)
+│   ├── i18n/LanguageProvider.tsx← pengganti bahasa ID / EN
 │   ├── components/
-│   │   ├── brand/Logo.tsx       ← logo (mark + wordmark)
-│   │   ├── layout/              ← Navbar, Footer
-│   │   ├── sections/            ← Hero, About, Members, Products, Contact
+│   │   ├── brand/               ← Logo (navbar) & LogoVector (logo interaktif)
+│   │   ├── layout/              ← RootLayout, Navbar, NavDropdown, PageNav, Footer
+│   │   ├── sections/            ← Hero, About/Meaning, LogoPhilosophy, VisionApproach,
+│   │   │                          Members, Products, Activity, Contact
 │   │   ├── members/             ← MemberPortrait (foto + placeholder)
 │   │   ├── products/            ← SmartGateIllustration, ProjectModal
 │   │   ├── water/               ← WaterCanvas (WebGL) + shaders
-│   │   └── ui/                  ← Button, Reveal, WaveEdge, SectionLabel
+│   │   └── ui/                  ← Button, Gauge (garis ukur), WaveEdge
 │   ├── hooks/useActiveSection.ts
 │   ├── styles/index.css         ← design tokens (warna, font) + CSS animasi
-│   ├── App.tsx
 │   └── main.tsx
 ├── index.html                   ← meta SEO, Open Graph, JSON-LD
 ├── package.json
@@ -112,35 +119,45 @@ Perintah lain:
 
 Tips:
 - Kompres dulu di https://squoosh.app (target < 250 KB per foto).
-- Mau pakai `.webp` atau `.png`? Ubah nama file di `src/content/site.ts` bagian `photo:`.
+- Mau pakai `.webp` atau `.png`? Ubah nama file di `src/content/en.ts & id.ts` bagian `photo:`.
 - Selama foto belum ada, website menampilkan placeholder elegan berisi inisial. Petunjuk nama file (*"Add photo → public/members/…"*) **hanya muncul saat `npm run dev`**, tidak muncul di website yang sudah di-deploy.
 
-**Menambah anggota baru:** tambahkan objek baru di array `members.people` pada `src/content/site.ts`, lalu taruh fotonya di `public/members/`. Layout menyesuaikan otomatis.
+**Menambah anggota baru:** tambahkan objek baru di array `members.people` pada `src/content/en.ts & id.ts`, lalu taruh fotonya di `public/members/`. Layout menyesuaikan otomatis.
 
 ---
 
 ## 5. Mengganti konten
 
-Semua teks ada di **`src/content/site.ts`**. Komponen tidak perlu disentuh.
+> **Dua bahasa.** Teks website ada di **dua file dengan struktur sama**:
+> `src/content/en.ts` (English) dan `src/content/id.ts` (Bahasa Indonesia).
+> Saat mengubah atau menambah teks, **ubah di kedua file**. Jika ada bagian yang lupa ditambahkan di salah satu file, `npm run build` akan menampilkan error TypeScript sehingga tidak ada teks yang hilang.
+> Tabel di bawah menyebut nama bagian; letaknya sama di kedua file. Teks antarmuka kecil (tombol, label) ada di bagian `ui`.
 
-| Yang ingin diubah | Bagian di `site.ts` |
+Komponen tidak perlu disentuh.
+
+| Yang ingin diubah | Bagian di `en.ts` & `id.ts` |
 |---|---|
 | Headline, deskripsi, tombol hero | `hero` |
 | Deskripsi "What is Reika?" & 5 filosofi | `about` |
 | Nama, posisi, deskripsi, foto anggota | `members.people` |
 | Judul & deskripsi section produk | `products` |
 | Detail Smart Gate (fitur, modal, status) | `smartGate` |
+| Menu dropdown navbar & URL tiap halaman | `navigation` (+ daftar route di `src/router.tsx`) |
+| Filosofi logo | `logoPhilosophy` |
+| Visi, misi, prinsip | `visionMission` |
+| Langkah kerja (Our approach) | `approach` |
+| Research journal (status proyek, tahapan, eksperimen, pencapaian, rencana) | `activity` |
 | Nomor WhatsApp, Instagram | `contact` |
 | Teks copyright | `footer` |
 
-### Mengaktifkan link Instagram
+### Mengubah link Instagram
 
-Saat ini link Instagram masih kosong (ditampilkan sebagai *"Link coming soon"*). Isi URL resminya:
+Saat ini terhubung ke **@reika_team**. Jika username berubah, ubah di `contact.instagram`:
 
 ```ts
 instagram: {
-  display: 'Reika Labs',
-  href: 'https://www.instagram.com/USERNAME_ANDA/',
+  display: '@reika_team',
+  href: 'https://www.instagram.com/reika_team/',
 },
 ```
 
@@ -154,21 +171,42 @@ Untuk saat ini hanya ada satu proyek unggulan (Smart Gate). Untuk proyek kedua, 
 
 ### Status jujur proyek
 
-Smart Gate sengaja ditampilkan sebagai **Research Project**: fitur dilabeli *"Proposed capabilities"*, ada catatan bahwa sistem belum beroperasi di lapangan, dan diagram diberi keterangan *"illustrative, not live data"*. Kalau nanti prototipe sudah berjalan, perbarui `status` dan `scopeNote` di `site.ts`.
+Smart Gate sengaja ditampilkan sebagai **Research project**: fitur dilabeli *"Proposed capabilities"*, ada catatan bahwa sistem belum beroperasi di lapangan, dan diagram diberi keterangan *"illustrative and not live data"*. Kalau nanti prototipe sudah berjalan, perbarui `status` dan `scopeNote` di `en.ts` dan `id.ts`.
 
 ---
 
+### Menambah update di Research journal
+
+Di `activity` (`src/content/en.ts & id.ts`):
+- `currentResearch.facts` → isi `Latest update` (sekarang `null`).
+- `experiments` → tambah `{ title, date, text }`.
+- `futureDirection` → tambah `{ title, text }`.
+- `achievements` → tambah entri; `published: false` = disembunyikan.
+
+Bagian yang kosong otomatis tampil sebagai "Not updated yet". Jangan isi dengan tanggal atau kegiatan karangan.
+
+Riwayat perubahan lengkap ada di `CHANGELOG.md`.
+
 ## 6. Mengganti logo
 
-Logo saat ini adalah mark SVG "tetes & riak" + wordmark **REIKA LABS**. Jika sudah ada logo resmi:
+Logo resmi (huruf R berbentuk pita, teal → biru langit) ada di `public/brand/`:
 
-- **Cara cepat (SVG):** ganti isi `<svg>` di `src/components/brand/Logo.tsx` (`LogoMark`) dengan path logo Anda. Gunakan `currentColor` agar warnanya ikut tema.
-- **Pakai file gambar:** simpan di `public/brand/`, lalu di `Logo.tsx` ganti `<LogoMark />` dengan `<img src={`${import.meta.env.BASE_URL}brand/logo.svg`} alt="" className="h-7 w-auto" />`.
-- Ganti juga `public/favicon.svg` dan `public/brand/reika-mark.svg`.
+| File | Dipakai untuk |
+|---|---|
+| `brand/reika-mark-128.png` | Navbar & footer (tampil 32 px) |
+| `brand/reika-mark.png` | Versi 512 px — dokumentasi, gambar OG |
+| `brand/reika-logo-full.png` | Versi resolusi penuh tanpa latar |
+| `favicon-32.png`, `apple-touch-icon.png` | Ikon tab browser & ikon di layar HP |
+
+Untuk mengganti logo, timpa file-file di atas dengan nama yang sama (PNG transparan, persegi). Nama "Reika Labs" di sebelah logo diatur di `src/components/brand/Logo.tsx`.
 
 ---
 
 ## 7. Deployment ke Vercel
+
+> **Penting (multi-page):** semua URL seperti `/about/logo` harus diarahkan ke `index.html` oleh hosting. Ini sudah diatur di `vercel.json` (Vercel) dan `public/_redirects` (Netlify). Cloudflare Pages melakukannya otomatis. Tanpa ini, refresh di halaman internal akan menghasilkan 404.
+>
+> GitHub Pages tidak mendukung rewrite: build dengan `VITE_BASE=./ VITE_ROUTER=hash npm run build` (URL menjadi `/#/about/logo`).
 
 ### Opsi A — lewat GitHub (disarankan, auto-deploy setiap push)
 
@@ -226,49 +264,51 @@ Setelah tahu URL final (misal `https://reikalabs.vercel.app`), buka `index.html`
 
 ## 9. Design system
 
-**Arah visual:** *Modern water-inspired technology* — laboratorium riset yang tenang, editorial, gelap–terang bergantian seperti permukaan dan kedalaman air.
+Website ini dirombak dengan pendekatan *unslop*: chrome (navigasi, tombol, teks) dibuat tenang, dan kekayaan visual dipusatkan di dua "momen" saja.
+
+**Arah desain**
+- **Produk:** kelompok riset mahasiswa dari Bandung yang mengubah masalah air dan lingkungan menjadi prototipe yang diuji
+- **Karakter:** penasaran, teliti, membumi
+- **Dunia:** riset lapangan di tepi danau — tiang ukur air, catatan lapangan, rumah sensor
+- **Momen:** (1) permukaan air interaktif di hero, (2) diagram Smart Gate
+- **Signature:** garis ukur ala *peilschaal* (tiang ukur ketinggian air) — di penanda section dan di diagram
 
 ### Warna (`src/styles/index.css` → `@theme`)
 
 | Token | Hex | Peran |
 |---|---|---|
-| `midnight` | `#060d1c` | Latar hero, contact, footer |
-| `abyss` | `#0a1730` | Latar members, panel proyek |
-| `ocean` | `#0c2f55` | Deep Ocean Blue — kedalaman |
-| `ocean-2` | `#12507e` | Aksen di latar terang, isi huruf REIKA |
-| `aqua` | `#2fb6c9` | Aqua Blue — aksen sekunder |
-| `cyan` | `#8ae7f2` | Cyan — aksen utama di latar gelap (dipakai hemat) |
-| `foam` / `paper` | `#f3f6f7` / `#eef2f3` | Soft White — section terang |
-| `ink` | `#0a1426` | Teks di latar terang |
+| `paper` | `#f4f7f8` | Latar halaman |
+| `surface` | `#ffffff` | Permukaan terangkat (kartu proyek) |
+| `ink` / `ink-2` / `ink-3` | `#0b1722` / `#44566a` / `#5b6c7d` | Teks utama / sekunder / redup |
+| `night` / `night-2` | `#07111c` / `#0d1b2a` | Hero & panel diagram |
+| `mist` / `mist-2` / `mist-3` | `#f4f7f8` / `#c9d4de` / `#9fb0c0` | Teks di latar gelap |
+| `sky` | `#00b7f9` | Aksen — biru langit dari logo, di latar gelap |
+| `sky-ink` | `#006c99` | Aksen untuk teks & tombol di latar terang (kontras 5.4:1) |
 
-Prinsip: biru terang hanya untuk aksen (satu kata di headline, label, garis). Section bergantian gelap ↔ terang agar tidak "biru semua".
+Aturan: satu aksen saja, dipakai hemat (tombol utama, peran anggota, titik status). Tidak ada gradasi warna, glow, atau teks bergradasi. Gradasi hanya ada di logo.
 
 ### Tipografi
+- **Tenor Sans** — judul besar
+- **Manrope** — teks & UI, bobot 400/500 (600 hanya untuk judul kecil)
+- **JetBrains Mono** — hanya angka kecil (nomor fitur) dan label diagram
+- Semua label *sentence case*, tanpa huruf kapital berspasi lebar. Judul, label, dan tombol tanpa titik di akhir.
 
-- **Tenor Sans** — display/headline. Selaras dengan font di deck presentasi REIKA sebelumnya, elegan dan tipis.
-- **Manrope** — teks isi dan UI.
-- **JetBrains Mono** — label kecil bergaya catatan laboratorium (`01 — About Reika`, `M—01`, `Fig. 01`).
-
-### Motif air
-
-| Elemen | Tempat |
-|---|---|
-| Simulasi permukaan air + riak cursor (WebGL) | Hero, Contact |
-| Gelombang pemisah section yang bergerak pelan | Antar section |
-| Huruf R-E-I-K-A terisi air saat di-hover | About |
-| "Garis air" naik saat hover | Tombol, foto anggota |
-| Logo: tetes + riak, berputar perlahan | Navbar, hero |
+### Spasi & sudut
+- Semua jarak kelipatan 4 px. Section: 96 px (mobile) / 128 px (desktop).
+- Radius: tombol 10 px, kartu 20 px dengan isi 12 px (radius bertingkat), foto 16 px.
 
 ---
 
 ## 10. Performa & aksesibilitas
 
+**Motion:** hanya satu animasi berulang, yaitu air di hero (beserta riak saat cursor bergerak/disentuh). Selain itu hanya ada satu animasi masuk saat halaman dibuka (headline, paragraf, tombol muncul bergantian), dan efek hover yang cepat (150 ms). Tidak ada parallax, elemen berputar, atau gelombang bergerak. Satu kurva easing: `cubic-bezier(0.22, 1, 0.36, 1)`.
+
 **Air WebGL (`src/components/water/WaterCanvas.tsx`):**
 - Render di resolusi rendah (40–60%) — gambar air lembut sehingga tidak terlihat bedanya.
 - Kualitas turun otomatis jika FPS < ±40; jika perangkat tetap berat, animasi berhenti di satu frame diam.
-- Berhenti saat section tidak terlihat atau tab tidak aktif (hemat baterai).
-- Perangkat tanpa WebGL → gradien CSS bergerak (fallback).
-- `prefers-reduced-motion` → frame diam, tanpa riak, tanpa parallax.
+- Berhenti saat hero tidak terlihat atau tab tidak aktif (hemat baterai).
+- Perangkat tanpa WebGL → latar air diam (fallback CSS).
+- `prefers-reduced-motion` → frame diam, tanpa riak, tanpa animasi masuk.
 
 **Aksesibilitas:**
 - HTML semantik (`header`, `nav`, `main`, `section`, `article`, `figure`, `dialog`).

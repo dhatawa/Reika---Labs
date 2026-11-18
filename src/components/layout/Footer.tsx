@@ -1,23 +1,22 @@
 import { Logo } from '../brand/Logo'
-import { contact, footer, site } from '../../content/site'
+import { useSite } from '../../content/site'
 
 export function Footer() {
+  const { contact, footer, site } = useSite()
   const ig = contact.instagram.href
   return (
-    <footer className="bg-midnight text-foam">
-      <div className="container-x flex flex-col gap-6 border-t border-foam/10 py-10 md:flex-row md:items-center md:justify-between">
+    <footer className="bg-paper text-ink">
+      <div className="container-x hairline flex flex-col gap-6 border-t py-10 md:flex-row md:items-center md:justify-between">
         <div className="flex flex-col gap-3 md:flex-row md:items-center md:gap-8">
-          <Logo markClassName="h-6 w-6 text-cyan" />
-          <p className="label text-foam/40">{site.acronym}</p>
+          <Logo size="sm" />
+          <p className="text-sm text-ink-3">{site.acronym}</p>
         </div>
-        <div className="flex flex-col gap-3 text-sm text-foam/50 md:flex-row md:items-center md:gap-8">
+        <div className="flex flex-col gap-3 text-sm text-ink-3 md:flex-row md:items-center md:gap-8">
           {ig ? (
-            <a href={ig} target="_blank" rel="noopener noreferrer" className="transition-colors hover:text-cyan">
-              Instagram
+            <a href={ig} target="_blank" rel="noopener noreferrer" className="transition-colors duration-150 hover:text-ink">
+              Instagram {contact.instagram.display}
             </a>
-          ) : (
-            <span>Instagram · {contact.instagram.display}</span>
-          )}
+          ) : null}
           <p>{footer.copyright}</p>
         </div>
       </div>

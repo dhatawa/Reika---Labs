@@ -5,8 +5,9 @@ import { fragmentShader, MAX_RIPPLES, vertexShader } from './shaders'
 type Variant = 'hero' | 'calm'
 
 const PALETTES: Record<Variant, { deep: number[]; mid: number[]; light: number[]; caustic: number; flow: number }> = {
-  hero: { deep: [0.016, 0.04, 0.09], mid: [0.05, 0.2, 0.36], light: [0.55, 0.9, 0.95], caustic: 1, flow: 1 },
-  calm: { deep: [0.02, 0.05, 0.11], mid: [0.045, 0.16, 0.3], light: [0.5, 0.86, 0.93], caustic: 0.55, flow: 0.7 },
+  // Slate-tinted lake water; light picks up the sky blue of the logo.
+  hero: { deep: [0.027, 0.067, 0.11], mid: [0.08, 0.26, 0.4], light: [0.62, 0.88, 0.98], caustic: 0.95, flow: 0.8 },
+  calm: { deep: [0.027, 0.067, 0.11], mid: [0.06, 0.16, 0.26], light: [0.6, 0.86, 0.96], caustic: 0.3, flow: 0.6 },
 }
 
 type Props = {

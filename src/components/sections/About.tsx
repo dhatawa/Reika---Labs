@@ -1,65 +1,76 @@
+import { SectionLabel } from '../ui/Gauge'
 import { Reveal } from '../ui/Reveal'
-import { SectionLabel } from '../ui/SectionLabel'
-import { WaveEdge } from '../ui/WaveEdge'
-import { about, site } from '../../content/site'
+import { fmt, useSite } from '../../content/site'
+
+/** Water level of each letter, rising from Research to Action. */
+const LEVELS = ['22%', '40%', '58%', '76%', '100%']
 
 export function About() {
+  const { about } = useSite()
   return (
-    <section id="about" aria-labelledby="about-title" className="relative bg-paper text-ink">
-      <div className="container-x pb-24 pt-20 md:pb-36 md:pt-28">
+    <section id="about" aria-labelledby="about-title" className="bg-paper text-ink">
+      <div className="container-x py-24 md:py-32">
         <Reveal>
-          <SectionLabel index={about.index} label={about.label} className="text-ink/55" />
+          <SectionLabel label={about.label} />
         </Reveal>
 
-        <div className="mt-10 grid gap-10 md:mt-14 lg:grid-cols-12 lg:gap-6">
+        <div className="mt-8 grid gap-8 lg:grid-cols-12 lg:gap-8">
           <Reveal className="lg:col-span-5">
-            <h2 id="about-title" className="font-display text-[clamp(2.75rem,6.4vw,6rem)] leading-[0.95] tracking-[-0.015em]">
+            <h1 id="about-title" className="font-display text-[clamp(2.5rem,5vw,4.5rem)] leading-[1] tracking-[-0.01em]">
               {about.title}
-            </h2>
+            </h1>
           </Reveal>
 
-          <Reveal delay={0.1} className="lg:col-span-6 lg:col-start-7 lg:pt-3">
-            <p className="text-[1.375rem] leading-snug tracking-tight text-ink md:text-[1.625rem]">{about.lead}</p>
+          <div className="lg:col-span-6 lg:col-start-7 lg:pt-2">
+            <p className="text-[1.375rem] leading-snug text-ink md:text-2xl">{about.lead}</p>
             {about.body.map((para) => (
-              <p key={para.slice(0, 24)} className="mt-6 max-w-xl text-[1rem] leading-relaxed text-ink/65">
+              <p key={para.slice(0, 24)} className="mt-6 max-w-xl leading-relaxed text-ink-2">
                 {para}
               </p>
             ))}
-          </Reveal>
-        </div>
-
-        {/* ── The five pillars, spelled as the name itself ── */}
-        <div className="mt-24 md:mt-36">
-          <Reveal className="flex flex-wrap items-baseline justify-between gap-4 border-b border-ink/15 pb-5">
-            <h3 className="label text-ink/55">Philosophy — five words, one name</h3>
-            <p className="label hidden text-ink/40 md:block">{site.acronym}</p>
-          </Reveal>
-
-          <ol className="grid md:grid-cols-5">
-            {about.pillars.map((p, i) => (
-              <li
-                key={p.word}
-                className="group relative grid grid-cols-[6.25rem_1fr] items-end gap-x-5 sm:grid-cols-[8rem_1fr] border-b border-ink/15 py-7 md:block md:border-b-0 md:border-r md:py-0 md:pr-6 md:pt-6 md:last:border-r-0 md:[&:not(:first-child)]:pl-6"
-              >
-                <Reveal delay={i * 0.07}>
-                  <span
-                    aria-hidden="true"
-                    className="water-letter block font-display text-[clamp(5.5rem,14vw,13rem)] leading-[0.8] md:-ml-1"
-                  >
-                    {p.letter}
-                  </span>
-                </Reveal>
-                <Reveal delay={0.1 + i * 0.07} className="pb-1 md:mt-10">
-                  <div className="label text-ink/40">0{i + 1}</div>
-                  <h4 className="mt-2 text-xl font-semibold tracking-tight md:text-[1.35rem]">{p.word}</h4>
-                  <p className="mt-2 max-w-[22ch] text-[0.95rem] leading-relaxed text-ink/60">{p.text}</p>
-                </Reveal>
-              </li>
-            ))}
-          </ol>
+          </div>
         </div>
       </div>
-      <WaveEdge fill="var(--color-abyss)" />
+    </section>
+  )
+}
+
+export function Meaning() {
+  const { about, site, ui } = useSite()
+  return (
+    <section id="meaning" aria-labelledby="meaning-title" className="bg-paper text-ink">
+      <div className="container-x py-24 md:py-32">
+        <Reveal>
+          <SectionLabel label={ui.meaningLabel} />
+          <div className="mt-8 flex flex-wrap items-end justify-between gap-6">
+            <h1 id="meaning-title" className="font-display text-[clamp(2.25rem,4vw,3.5rem)] leading-[1.05] tracking-[-0.01em]">
+              {about.pillarsTitle}
+            </h1>
+            <p className="max-w-sm text-ink-2">{fmt(ui.acronymNote, { acronym: site.acronym })}</p>
+          </div>
+        </Reveal>
+
+        <ol className="hairline mt-12 grid border-t md:grid-cols-5">
+          {about.pillars.map((p, i) => (
+            <li
+              key={p.word}
+              className="hairline grid grid-cols-[6rem_1fr] items-end gap-x-6 border-b py-6 sm:grid-cols-[8rem_1fr] md:block md:border-b-0 md:border-r md:py-0 md:pr-6 md:pt-8 md:last:border-r-0 md:[&:not(:first-child)]:pl-6"
+            >
+              <span
+                aria-hidden="true"
+                style={{ ['--level' as string]: LEVELS[i] }}
+                className="level-letter block font-display text-[clamp(5rem,12vw,11rem)] leading-[0.8]"
+              >
+                {p.letter}
+              </span>
+              <div className="pb-1 md:mt-8">
+                <h3 className="text-lg font-semibold text-ink">{p.word}</h3>
+                <p className="mt-2 max-w-[24ch] leading-relaxed text-ink-2">{p.text}</p>
+              </div>
+            </li>
+          ))}
+        </ol>
+      </div>
     </section>
   )
 }
