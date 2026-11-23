@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pintu Cerdas Situ Bugel — Reika Labs</title>
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#0F2A33; --muted:#5B7680; --line:#DCE7E3; --bg:#F3F7F5; --card:#FFFFFF;
+    --teal:#0E7A68; --teal-soft:#D7ECE6; --sky:#2F8FCB; --sky-soft:#DCEAF5;
+    --amber:#B86E00; --amber-soft:#FBEBD0; --red:#B3261E; --red-soft:#F8DEDB;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:Inter,system-ui,sans-serif;background:var(--bg);color:var(--ink);font-size:15px}
+  h1,h2,h3{font-family:'Space Grotesk',Inter,sans-serif;margin:0}
+  .wrap{max-width:1280px;margin:0 auto;padding:20px}
+  header{display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:16px}
+  .brand{display:flex;align-items:center;gap:12px}
+  .logo{width:42px;height:42px;border-radius:12px;background:linear-gradient(135deg,#1FA38A,#4FB3E8);display:grid;place-items:center;color:#fff;font-family:'Space Grotesk';font-weight:700;font-size:22px}
+  .brand h1{font-size:20px}
+  .brand p{margin:2px 0 0;color:var(--muted);font-size:13px}
+  .spacer{flex:1}
+  .pill{display:inline-flex;align-items:center;gap:8px;padding:7px 12px;border-radius:999px;background:var(--card);border:1px solid var(--line);font-size:13px;color:var(--muted)}
+  .dot{width:8px;height:8px;border-radius:50%;background:var(--teal);animation:pulse 2s infinite}
+  @keyframes pulse{50%{opacity:.35}}
+  .lang{display:inline-flex;border:1px solid var(--line);border-radius:999px;overflow:hidden;background:var(--card)}
+  .lang button{border:0;background:transparent;padding:7px 14px;font:600 13px Inter;color:var(--muted);cursor:pointer}
+  .lang button.on{background:var(--ink);color:#fff}
+  .banner{background:var(--amber-soft);color:#6B4100;border-radius:12px;padding:10px 14px;font-size:13px;margin-bottom:16px}
+  .grid{display:grid;gap:16px}
+  .kpis{grid-template-columns:repeat(5,1fr)}
+  .main{grid-template-columns:2fr 1fr;margin-top:16px}
+  .bottom{grid-template-columns:1fr 1fr 1fr;margin-top:16px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px}
+  .card h2{font-size:16px;margin-bottom:12px}
+  .kpi .label{color:var(--muted);font-size:13px}
+  .kpi .val{font-family:'Space Grotesk';font-size:28px;font-weight:700;margin-top:6px}
+  .kpi .val small{font-size:14px;color:var(--muted);font-weight:500;margin-left:4px}
+  .kpi .bar{height:6px;border-radius:6px;background:var(--line);margin-top:10px;overflow:hidden}
+  .kpi .bar i{display:block;height:100%;background:var(--teal);border-radius:6px;transition:width .6s}
+  .chart-head{display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:8px}
+  .legend{display:flex;gap:14px;font-size:12px;color:var(--muted)}
+  .legend span{display:inline-flex;align-items:center;gap:6px}
+  .legend i{width:14px;height:3px;border-radius:2px;display:inline-block}
+  svg text{font-family:Inter;font-size:11px;fill:var(--muted)}
+  .gate-wrap{display:flex;gap:16px;align-items:center}
+  .gate-state{font-family:'Space Grotesk';font-size:22px;font-weight:700}
+  .seg{display:flex;border:1px solid var(--line);border-radius:10px;overflow:hidden;margin:12px 0}
+  .seg button{flex:1;border:0;background:#fff;padding:9px;font:600 13px Inter;color:var(--muted);cursor:pointer}
+  .seg button.on{background:var(--teal);color:#fff}
+  .btns{display:flex;gap:8px}
+  .btn{flex:1;border:1px solid var(--line);background:#fff;border-radius:10px;padding:10px;font:600 13px Inter;cursor:pointer;color:var(--ink)}
+  .btn.primary{background:var(--sky);border-color:var(--sky);color:#fff}
+  .btn:disabled{opacity:.4;cursor:not-allowed}
+  input[type=range]{width:100%;accent-color:var(--sky);margin-top:12px}
+  .hint{font-size:12px;color:var(--muted);margin-top:6px}
+  .risk{border-radius:12px;padding:14px;margin-top:4px}
+  .risk .lvl{font-family:'Space Grotesk';font-size:24px;font-weight:700}
+  .risk.low{background:var(--teal-soft);color:#0A5446}
+  .risk.med{background:var(--amber-soft);color:#6B4100}
+  .risk.high{background:var(--red-soft);color:#7A1A14}
+  .rec{margin-top:12px;font-size:14px;line-height:1.5}
+  .rec b{display:block;font-size:12px;color:var(--muted);font-weight:600;margin-bottom:2px}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  td{padding:8px 4px;border-bottom:1px solid var(--line);vertical-align:top}
+  td.t{color:var(--muted);white-space:nowrap;width:56px}
+  .info-row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--line);font-size:14px}
+  .info-row span:first-child{color:var(--muted)}
+  .big{font-family:'Space Grotesk';font-size:30px;font-weight:700}
+  footer{color:var(--muted);font-size:12px;text-align:center;margin:24px 0 8px}
+  @media (max-width:1000px){.kpis{grid-template-columns:repeat(2,1fr)}.main,.bottom{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="brand">
+      <div class="logo">R</div>
+      <div>
+        <h1 data-i18n="title"></h1>
+        <p data-i18n="subtitle"></p>
+      </div>
+    </div>
+    <div class="spacer"></div>
+    <span class="pill"><span class="dot"></span><span data-i18n="live"></span></span>
+    <span class="pill"><span data-i18n="updated"></span>&nbsp;<b id="clock">--:--</b></span>
+    <div class="lang"><button data-lang="id">ID</button><button data-lang="en">EN</button></div>
+  </header>
+
+  <div class="banner" data-i18n="demo"></div>
+
+  <section class="grid kpis">
+    <div class="card kpi"><div class="label" data-i18n="lake"></div><div class="val"><span id="kLake">-</span><small>m</small></div><div class="bar"><i id="bLake"></i></div></div>
+    <div class="card kpi"><div class="label" data-i18n="channel"></div><div class="val"><span id="kChannel">-</span><small>m</small></div><div class="bar"><i id="bChannel" style="background:var(--sky)"></i></div></div>
+    <div class="card kpi"><div class="label" data-i18n="rain"></div><div class="val"><span id="kRain">-</span><small>mm/<span data-i18n="hour"></span></small></div><div class="bar"><i id="bRain" style="background:var(--sky)"></i></div></div>
+    <div class="card kpi"><div class="label" data-i18n="turb"></div><div class="val"><span id="kTurb">-</span><small>NTU</small></div><div class="bar"><i id="bTurb" style="background:var(--amber)"></i></div></div>
+    <div class="card kpi"><div class="label" data-i18n="cap"></div><div class="val"><span id="kCap">-</span><small>%</small></div><div class="bar"><i id="bCap"></i></div></div>
+  </section>
+
+  <section class="grid main">
+    <div class="card">
+      <div class="chart-head">
+        <h2 style="margin:0" data-i18n="chart"></h2>
+        <div class="spacer"></div>
+        <div class="legend">
+          <span><i style="background:var(--teal)"></i><span data-i18n="legendLake"></span></span>
+          <span><i style="background:var(--sky)"></i><span data-i18n="legendChannel"></span></span>
+          <span><i style="background:var(--red)"></i><span data-i18n="legendLimit"></span></span>
+        </div>
+      </div>
+      <svg id="chart" viewBox="0 0 800 280" width="100%" role="img" aria-label="Water level chart"></svg>
+    </div>
+
+    <div class="card">
+      <h2 data-i18n="gate"></h2>
+      <div class="gate-wrap">
+        <svg viewBox="0 0 120 120" width="110" height="110" aria-label="Gate">
+          <rect x="10" y="10" width="100" height="100" rx="8" fill="#EAF2EF" stroke="#C9DAD5"/>
+          <rect x="18" y="70" width="84" height="32" fill="#9FD3EC"/>
+          <rect id="gatePanel" x="18" y="18" width="84" height="84" rx="4" fill="#0F2A33"/>
+          <rect x="8" y="6" width="104" height="8" rx="3" fill="#5B7680"/>
+        </svg>
+        <div>
+          <div class="hint" data-i18n="opening"></div>
+          <div class="gate-state"><span id="gatePct">0</span>%</div>
+          <div class="hint" id="gateLabel"></div>
+        </div>
+      </div>
+      <div class="hint" style="margin-top:12px" data-i18n="mode"></div>
+      <div class="seg">
+        <button id="mAuto" data-i18n="auto"></button>
+        <button id="mManual" data-i18n="manual"></button>
+      </div>
+      <div class="btns">
+        <button class="btn primary" id="bOpen" data-i18n="open"></button>
+        <button class="btn" id="bClose" data-i18n="close"></button>
+      </div>
+      <input type="range" id="slider" min="0" max="100" step="10" value="0" aria-label="Gate opening">
+      <div class="hint" id="modeHint"></div>
+    </div>
+  </section>
+
+  <section class="grid bottom">
+    <div class="card">
+      <h2 data-i18n="risk"></h2>
+      <div class="risk low" id="riskBox"><div class="lvl" id="riskLvl"></div><div class="hint" style="color:inherit" id="riskScore"></div></div>
+      <div class="rec"><b data-i18n="recTitle"></b><span id="recText"></span></div>
+    </div>
+    <div class="card">
+      <h2 data-i18n="sed"></h2>
+      <div class="big"><span id="sedCm">-</span> cm</div>
+      <div class="hint" data-i18n="sedSub"></div>
+      <div class="info-row" style="margin-top:12px"><span data-i18n="capLeft"></span><span><b id="capLeft">-</b> m³</span></div>
+      <div class="info-row"><span data-i18n="nextDredge"></span><span><b id="dredge">-</b></span></div>
+    </div>
+    <div class="card">
+      <h2 data-i18n="log"></h2>
+      <table id="logTable"></table>
+    </div>
+  </section>
+
+  <section class="grid bottom">
+    <div class="card" style="grid-column:1/-1">
+      <h2 data-i18n="info"></h2>
+      <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:0 24px">
+        <div class="info-row"><span data-i18n="area"></span><span>± 3.500 m²</span></div>
+        <div class="info-row"><span data-i18n="depth"></span><span>2–3 m</span></div>
+        <div class="info-row"><span data-i18n="vol"></span><span>7.000–10.500 m³</span></div>
+        <div class="info-row"><span data-i18n="flood"></span><span>± 75%</span></div>
+      </div>
+    </div>
+  </section>
+
+  <footer data-i18n="footer"></footer>
+</div>
+
+<script>
+const T = {
+  id:{
+    title:"Pintu Cerdas Situ Bugel", subtitle:"Pemantauan dan kendali pintu air danau retensi · Reika Labs",
+    live:"Simulasi ESP32", updated:"Diperbarui", hour:"jam",
+    demo:"Mode demo: data pada halaman ini adalah simulasi dan belum terhubung ke sensor di lapangan.",
+    lake:"Muka air danau", channel:"Muka air saluran", rain:"Curah hujan", turb:"Kekeruhan air masuk", cap:"Kapasitas danau terisi",
+    chart:"Tinggi muka air 24 jam terakhir", legendLake:"Danau", legendChannel:"Saluran", legendLimit:"Batas siaga saluran",
+    gate:"Pintu air", opening:"Bukaan pintu", mode:"Mode kendali", auto:"Otomatis", manual:"Manual", open:"Buka", close:"Tutup",
+    gOpen:"Terbuka penuh", gClosed:"Tertutup", gPartial:"Terbuka sebagian",
+    hintAuto:"Pintu diatur sistem berdasarkan data sensor dan prediksi.", hintManual:"Pintu dikendalikan operator dari jarak jauh.",
+    risk:"Prediksi risiko genangan (6 jam)", low:"Rendah", med:"Sedang", high:"Tinggi", score:"Skor risiko",
+    recTitle:"Rekomendasi sistem",
+    recHigh:"Buka pintu agar limpasan dari saluran tertampung di danau dan permukiman tidak tergenang.",
+    recTurb:"Tutup pintu: air dari saluran membawa sedimen tinggi dan akan mempercepat pendangkalan.",
+    recNormal:"Kondisi normal. Pertahankan bukaan sebagian untuk sirkulasi air.",
+    sed:"Estimasi sedimentasi", sedSub:"Rata-rata ketebalan endapan di dasar danau (estimasi model)",
+    capLeft:"Sisa daya tampung", nextDredge:"Perkiraan pengerukan",
+    months:"bulan lagi",
+    log:"Riwayat kejadian",
+    lgOpen:"Pintu dibuka {v}%", lgClose:"Pintu ditutup", lgSet:"Bukaan pintu diubah ke {v}%",
+    lgRiskHigh:"Risiko genangan naik ke TINGGI", lgRiskMed:"Risiko genangan SEDANG", lgRiskLow:"Risiko genangan kembali RENDAH",
+    lgTurb:"Kekeruhan air masuk tinggi ({v} NTU)", lgAuto:"Mode diubah ke Otomatis", lgManual:"Mode diubah ke Manual", lgStart:"Sistem demo dimulai",
+    info:"Data Situ Bugel", area:"Luas permukaan", depth:"Kedalaman rata-rata (estimasi)", vol:"Volume tampung (estimasi)", flood:"Penurunan frekuensi genangan sejak 2020",
+    footer:"© Reika Labs · Prototipe dashboard Pintu Cerdas Situ Bugel · Data simulasi"
+  },
+  en:{
+    title:"Situ Bugel Smart Gate", subtitle:"Retention lake monitoring and gate control · Reika Labs",
+    live:"ESP32 simulation", updated:"Updated", hour:"h",
+    demo:"Demo mode: data on this page is simulated and not yet connected to field sensors.",
+    lake:"Lake water level", channel:"Channel water level", rain:"Rainfall", turb:"Inflow turbidity", cap:"Lake capacity used",
+    chart:"Water level, last 24 hours", legendLake:"Lake", legendChannel:"Channel", legendLimit:"Channel alert level",
+    gate:"Water gate", opening:"Gate opening", mode:"Control mode", auto:"Automatic", manual:"Manual", open:"Open", close:"Close",
+    gOpen:"Fully open", gClosed:"Closed", gPartial:"Partly open",
+    hintAuto:"The gate is set by the system from sensor data and forecasts.", hintManual:"The gate is controlled remotely by an operator.",
+    risk:"Flood risk forecast (6 h)", low:"Low", med:"Medium", high:"High", score:"Risk score",
+    recTitle:"System recommendation",
+    recHigh:"Open the gate so channel runoff is stored in the lake and homes stay dry.",
+    recTurb:"Close the gate: inflow carries heavy sediment and would speed up silting.",
+    recNormal:"Normal conditions. Keep the gate partly open for circulation.",
+    sed:"Estimated sedimentation", sedSub:"Average sediment thickness on the lake bed (model estimate)",
+    capLeft:"Remaining capacity", nextDredge:"Estimated dredging",
+    months:"months away",
+    log:"Event log",
+    lgOpen:"Gate opened {v}%", lgClose:"Gate closed", lgSet:"Gate opening set to {v}%",
+    lgRiskHigh:"Flood risk rose to HIGH", lgRiskMed:"Flood risk MEDIUM", lgRiskLow:"Flood risk back to LOW",
+    lgTurb:"High inflow turbidity ({v} NTU)", lgAuto:"Mode set to Automatic", lgManual:"Mode set to Manual", lgStart:"Demo system started",
+    info:"Situ Bugel facts", area:"Surface area", depth:"Average depth (estimate)", vol:"Storage volume (estimate)", flood:"Drop in flooding frequency since 2020",
+    footer:"© Reika Labs · Situ Bugel Smart Gate dashboard prototype · Simulated data"
+  }
+};
+
+let lang = "id";
+try { lang = localStorage.getItem("reika-lang") || "id"; } catch(e) {}
+
+const S = {
+  lake:2.1, channel:0.6, rain:0, turb:35, gate:30, mode:"auto",
+  sed:12.4, risk:"low", score:0, t:0,
+  histLake:[], histChannel:[], log:[]
+};
+const LIMIT = 1.2, MAX_DEPTH = 3, AREA = 3500;
+
+const fmt = (n,d=2) => n.toLocaleString(lang==="id"?"id-ID":"en-US",{minimumFractionDigits:d,maximumFractionDigits:d});
+const clamp = (v,a,b) => Math.max(a,Math.min(b,v));
+const now = () => new Date().toLocaleTimeString(lang==="id"?"id-ID":"en-GB",{hour:"2-digit",minute:"2-digit"});
+
+function addLog(key, v){
+  S.log.unshift({time:now(), key, v});
+  S.log = S.log.slice(0,7);
+}
+
+// seed 24 h of history (48 points, every 30 min)
+for(let i=0;i<48;i++){
+  const storm = Math.max(0, Math.sin((i-30)/5));
+  S.histChannel.push(clamp(0.5 + storm*0.9 + (Math.random()-.5)*0.08, 0.2, 1.6));
+  S.histLake.push(clamp(2.0 + storm*0.35 + (Math.random()-.5)*0.04, 1.6, 2.9));
+}
+S.lake = S.histLake[47]; S.channel = S.histChannel[47];
+
+function step(){
+  S.t++;
+  // rain cycle: a storm roughly every few minutes of demo time
+  const cycle = Math.sin(S.t/18);
+  const target = cycle > 0.55 ? 15 + (cycle-0.55)*70 : 0;
+  S.rain = clamp(S.rain + (target - S.rain)*0.35 + (Math.random()-.5)*2, 0, 45);
+  S.channel = clamp(S.channel + (0.35 + S.rain*0.03 - S.channel)*0.25 + (Math.random()-.5)*0.03, 0.2, 1.8);
+  S.turb = clamp(S.turb + (25 + S.rain*3 - S.turb)*0.3 + (Math.random()-.5)*6, 5, 180);
+  const inflow = (S.gate/100) * Math.max(0, S.channel - 0.3) * 0.05;
+  S.lake = clamp(S.lake + inflow - 0.008 + (Math.random()-.5)*0.01, 1.6, 2.95);
+  S.sed = +(S.sed + (S.gate/100) * (S.turb/180) * 0.01).toFixed(3);
+
+  // risk model (simple weighted score standing in for the ML model)
+  const score = clamp((S.channel/LIMIT)*0.5 + (S.rain/40)*0.3 + (S.lake/MAX_DEPTH)*0.2, 0, 1.2);
+  S.score = score;
+  const prev = S.risk;
+  S.risk = score > 0.85 ? "high" : score > 0.6 ? "med" : "low";
+  if(prev !== S.risk) addLog(S.risk==="high"?"lgRiskHigh":S.risk==="med"?"lgRiskMed":"lgRiskLow");
+
+  if(S.mode === "auto"){
+    let g;
+    if(S.risk === "high" || S.channel > LIMIT) g = 100;
+    else if(S.turb > 90){ g = 0; if(S.gate !== 0) addLog("lgTurb", Math.round(S.turb)); }
+    else g = 30;
+    if(g !== S.gate){ setGate(g, true); }
+  }
+
+  if(S.t % 2 === 0){
+    S.histLake.push(S.lake); S.histLake.shift();
+    S.histChannel.push(S.channel); S.histChannel.shift();
+  }
+  render();
+}
+
+function setGate(v, fromAuto){
+  const old = S.gate;
+  S.gate = v;
+  if(v === 0) addLog("lgClose");
+  else if(v === 100) addLog("lgOpen", 100);
+  else if(old !== v) addLog("lgSet", v);
+}
+
+function renderChart(){
+  const svg = document.getElementById("chart");
+  const W=800,H=280,pl=40,pr=10,pt=10,pb=30, min=0, max=3;
+  const x = i => pl + i*(W-pl-pr)/47;
+  const y = v => pt + (1-(v-min)/(max-min))*(H-pt-pb);
+  let g = "";
+  for(let v=0; v<=3; v+=0.5){
+    g += `<line x1="${pl}" x2="${W-pr}" y1="${y(v)}" y2="${y(v)}" stroke="#E6EEEB"/>`;
+    g += `<text x="${pl-8}" y="${y(v)+4}" text-anchor="end">${fmt(v,1)}</text>`;
+  }
+  for(let i=0;i<48;i+=8){
+    const h = (i-48)/2;
+    g += `<text x="${x(i)}" y="${H-8}" text-anchor="middle">${h}${lang==="id"?" jam":" h"}</text>`;
+  }
+  g += `<text x="${x(47)}" y="${H-8}" text-anchor="end">${lang==="id"?"kini":"now"}</text>`;
+  g += `<line x1="${pl}" x2="${W-pr}" y1="${y(LIMIT)}" y2="${y(LIMIT)}" stroke="#B3261E" stroke-dasharray="6 5"/>`;
+  const path = arr => arr.map((v,i)=>`${i?"L":"M"}${x(i).toFixed(1)},${y(v).toFixed(1)}`).join("");
+  const area = arr => path(arr) + `L${x(47)},${y(0)}L${x(0)},${y(0)}Z`;
+  g += `<path d="${area(S.histLake)}" fill="#0E7A68" opacity=".08"/>`;
+  g += `<path d="${path(S.histLake)}" fill="none" stroke="#0E7A68" stroke-width="2.5"/>`;
+  g += `<path d="${path(S.histChannel)}" fill="none" stroke="#2F8FCB" stroke-width="2.5"/>`;
+  g += `<circle cx="${x(47)}" cy="${y(S.histLake[47])}" r="4" fill="#0E7A68"/>`;
+  g += `<circle cx="${x(47)}" cy="${y(S.histChannel[47])}" r="4" fill="#2F8FCB"/>`;
+  svg.innerHTML = g;
+}
+
+function render(){
+  const t = T[lang];
+  document.documentElement.lang = lang;
+  document.querySelectorAll("[data-i18n]").forEach(el => { el.textContent = t[el.dataset.i18n]; });
+  document.querySelectorAll(".lang button").forEach(b => b.classList.toggle("on", b.dataset.lang===lang));
+  document.getElementById("clock").textContent = now();
+
+  const capPct = S.lake/MAX_DEPTH*100;
+  const set = (id,val,bar,pct) => { document.getElementById(id).textContent = val; document.getElementById(bar).style.width = clamp(pct,0,100)+"%"; };
+  set("kLake", fmt(S.lake), "bLake", S.lake/MAX_DEPTH*100);
+  set("kChannel", fmt(S.channel), "bChannel", S.channel/1.8*100);
+  set("kRain", fmt(S.rain,1), "bRain", S.rain/45*100);
+  set("kTurb", fmt(S.turb,0), "bTurb", S.turb/180*100);
+  set("kCap", fmt(capPct,0), "bCap", capPct);
+
+  document.getElementById("gatePct").textContent = S.gate;
+  document.getElementById("gateLabel").textContent = S.gate===0 ? t.gClosed : S.gate===100 ? t.gOpen : t.gPartial;
+  const panelH = 84 * (1 - S.gate/100);
+  const panel = document.getElementById("gatePanel");
+  panel.setAttribute("height", Math.max(panelH,2));
+  document.getElementById("slider").value = S.gate;
+  const auto = S.mode==="auto";
+  document.getElementById("mAuto").classList.toggle("on", auto);
+  document.getElementById("mManual").classList.toggle("on", !auto);
+  ["bOpen","bClose","slider"].forEach(id => document.getElementById(id).disabled = auto);
+  document.getElementById("modeHint").textContent = auto ? t.hintAuto : t.hintManual;
+
+  const box = document.getElementById("riskBox");
+  box.className = "risk " + S.risk;
+  document.getElementById("riskLvl").textContent = t[S.risk];
+  document.getElementById("riskScore").textContent = `${t.score}: ${fmt(S.score*100,0)}/100`;
+  document.getElementById("recText").textContent =
+    S.risk==="high" || S.channel > LIMIT ? t.recHigh : S.turb > 90 ? t.recTurb : t.recNormal;
+
+  document.getElementById("sedCm").textContent = fmt(S.sed,1);
+  const capLeft = AREA * (MAX_DEPTH - S.lake);
+  document.getElementById("capLeft").textContent = fmt(Math.max(capLeft,0),0);
+  const months = Math.max(1, Math.round((40 - S.sed)/1.2));
+  document.getElementById("dredge").textContent = `± ${months} ${t.months}`;
+
+  document.getElementById("logTable").innerHTML = S.log.map(l =>
+    `<tr><td class="t">${l.time}</td><td>${t[l.key].replace("{v}", l.v ?? "")}</td></tr>`).join("");
+
+  renderChart();
+}
+
+document.querySelectorAll(".lang button").forEach(b => b.onclick = () => {
+  lang = b.dataset.lang;
+  try { localStorage.setItem("reika-lang", lang); } catch(e) {}
+  render();
+});
+document.getElementById("mAuto").onclick = () => { if(S.mode!=="auto"){ S.mode="auto"; addLog("lgAuto"); render(); } };
+document.getElementById("mManual").onclick = () => { if(S.mode!=="manual"){ S.mode="manual"; addLog("lgManual"); render(); } };
+document.getElementById("bOpen").onclick = () => { setGate(100); render(); };
+document.getElementById("bClose").onclick = () => { setGate(0); render(); };
+document.getElementById("slider").oninput = e => { setGate(+e.target.value); render(); };
+
+addLog("lgStart");
+render();
+setInterval(step, 2500);
+</script>
+</body>
+</html>
