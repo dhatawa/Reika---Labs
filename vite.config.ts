@@ -11,5 +11,11 @@ export default defineConfig({
   build: {
     target: 'es2020',
     cssCodeSplit: true,
+    rolldownOptions: {
+      input: {
+        main: 'index.html',
+        dashboard: 'dashboard/index.html',
+      },
+    },
   },
 })
