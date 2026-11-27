@@ -65,10 +65,13 @@ export function Products() {
             </ul>
             <p className="mt-4 text-sm leading-relaxed text-ink-3">{smartGate.scopeNote}</p>
 
-            <div className="mt-auto pt-10">
+            <div className="mt-auto flex flex-wrap gap-3 pt-10">
               <Button tone="primary" onClick={() => setOpen(true)} aria-haspopup="dialog">
                 {ui.exploreProject}
               </Button>
+              <ButtonLink href="/smart-water-gate-3d" tone="outline-dark">
+                {ui.show3dModel}
+              </ButtonLink>
             </div>
           </div>
         </article>

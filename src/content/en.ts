@@ -400,6 +400,7 @@ export const ui = {
 
   diagramCaption: 'Conceptual system diagram, illustrative and not live data',
   exploreProject: 'Explore project',
+  show3dModel: 'View 3D model',
   closeProject: 'Close project details',
   recognition: 'Recognition',
   interestedTitle: 'Interested in this research?',

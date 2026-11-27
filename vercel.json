@@ -3,6 +3,7 @@
   "rewrites": [
     { "source": "/dashboard", "destination": "/dashboard/index.html" },
     { "source": "/dashboard/", "destination": "/dashboard/index.html" },
+    { "source": "/smart-water-gate-3d", "destination": "/smart-water-gate-3d.html" },
     { "source": "/(.*)", "destination": "/index.html" }
   ]
 }

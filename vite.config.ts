@@ -15,6 +15,7 @@ export default defineConfig({
       input: {
         main: 'index.html',
         dashboard: 'dashboard/index.html',
+        smartGate3d: 'smart-water-gate-3d.html',
       },
     },
   },

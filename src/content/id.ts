@@ -371,6 +371,7 @@ export const ui = {
 
   diagramCaption: 'Diagram konsep sistem, ilustrasi dan bukan data langsung',
   exploreProject: 'Lihat proyek',
+  show3dModel: 'Tampilkan model 3D',
   closeProject: 'Tutup detail proyek',
   recognition: 'Penghargaan',
   interestedTitle: 'Tertarik dengan riset ini?',
