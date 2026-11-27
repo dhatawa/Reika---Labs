@@ -141,6 +141,28 @@ export const smartGate = {
   ],
 }
 
+export const reBoats = {
+  name: 'RE-BOATS',
+  status: 'Draft prototype',
+  categories: ['Autonomous vessel', 'Water monitoring', 'Waste collection', 'Solar propulsion'],
+  tagline: 'A solar-electric catamaran concept for waste collection and lake water monitoring',
+  description:
+    'RE-BOATS is an autonomous catamaran concept that combines surface waste collection, real-time water-quality monitoring, AI-assisted detection, and solar-electric propulsion.',
+  scopeNote:
+    'This project is still at the prototype and engineering-visualization stage. The 3D model is a visual concept and does not represent a vessel operating in the field.',
+  featuresTitle: 'Design modules',
+  features: [
+    'Twin-hull catamaran platform',
+    'Surface waste intake',
+    'AI optical detection',
+    'Water-quality sensor suite',
+    'Solar power system',
+    'Electric propulsion',
+  ],
+  visualHref: '/re-boats.html',
+  visualLabel: 'Open 3D visualization',
+}
+
 /* ── Contact ────────────────────────────────────────────────── */
 export const contact = {
   label: 'Contact',

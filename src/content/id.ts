@@ -133,6 +133,28 @@ export const smartGate = {
   ],
 }
 
+export const reBoats = {
+  name: 'RE-BOATS',
+  status: 'Draf prototipe',
+  categories: ['Kapal autonom', 'Pemantauan air', 'Pengumpulan sampah', 'Propulsi surya'],
+  tagline: 'Konsep katamaran tenaga surya untuk pengumpulan sampah dan pemantauan air danau',
+  description:
+    'RE-BOATS adalah konsep katamaran autonom yang menggabungkan pengumpulan sampah permukaan, pemantauan kualitas air secara real-time, deteksi berbantuan AI, dan propulsi tenaga surya listrik.',
+  scopeNote:
+    'Proyek ini masih berada pada tahap prototipe dan visualisasi rekayasa. Model 3D merupakan konsep visual dan belum mewakili kapal yang beroperasi di lapangan.',
+  featuresTitle: 'Modul rancangan',
+  features: [
+    'Platform katamaran dua lambung',
+    'Saluran pengambil sampah permukaan',
+    'Deteksi optik berbasis AI',
+    'Sensor kualitas air',
+    'Sistem tenaga surya',
+    'Propulsi listrik',
+  ],
+  visualHref: '/re-boats.html',
+  visualLabel: 'Buka visualisasi 3D',
+}
+
 /* ── Contact ────────────────────────────────────────────────── */
 export const contact = {
   label: 'Kontak',

@@ -1,0 +1,2937 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>RE-BOATS | 3D Engineering Visualization</title>
+
+  <!-- Modern Engineering Typography -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+
+  <!-- Import Map for Three.js ES Modules -->
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+      }
+    }
+  </script>
+
+  <style>
+    :root {
+      --bg-deep: #050c19;
+      --bg-navy: #0a1628;
+      --panel-bg: rgba(9, 20, 38, 0.74);
+      --panel-bg-strong: rgba(8, 17, 34, 0.88);
+      --border-subtle: rgba(148, 184, 224, 0.16);
+      --border-cyan: rgba(0, 229, 255, 0.42);
+      --cyan: #00e5ff;
+      --cyan-dim: rgba(0, 229, 255, 0.14);
+      --emerald: #10b981;
+      --amber: #f59e0b;
+      --text-primary: #eef6ff;
+      --text-secondary: #94a8c4;
+      --text-muted: #647a99;
+      --radius-lg: 14px;
+      --radius-md: 10px;
+      --radius-sm: 7px;
+      --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background-color: var(--bg-deep);
+      color: var(--text-primary);
+      font-family: var(--font-sans);
+      font-size: 13px;
+      line-height: 1.45;
+      user-select: none;
+    }
+
+    /* Fullscreen 3D Viewport */
+    #canvas-container {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 1;
+      background: radial-gradient(circle at 50% 35%, #112746 0%, #050c19 100%);
+    }
+
+    #canvas-container canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+      outline: none;
+    }
+
+    /* Glassmorphism Panel Base */
+    .glass-panel {
+      background: var(--panel-bg);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border: 1px solid var(--border-subtle);
+      box-shadow: 0 12px 36px rgba(0, 0, 0, 0.42), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+    }
+
+    /* ================= TOP HEADER ================= */
+    #top-header {
+      position: fixed;
+      top: 12px;
+      left: 12px;
+      right: 12px;
+      z-index: 20;
+      border-radius: var(--radius-lg);
+      padding: 10px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      flex-wrap: wrap;
+    }
+
+    .brand-group {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 0;
+    }
+
+    .brand-logo {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, rgba(0, 229, 255, 0.24), rgba(0, 120, 255, 0.14));
+      border: 1px solid var(--border-cyan);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      box-shadow: 0 0 18px rgba(0, 229, 255, 0.2);
+    }
+
+    .brand-titles {
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+    }
+
+    .brand-title {
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      color: var(--text-primary);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      white-space: nowrap;
+    }
+
+    .brand-title .accent {
+      color: var(--cyan);
+      font-family: var(--font-mono);
+      font-weight: 600;
+    }
+
+    .brand-subtitle {
+      font-size: 11px;
+      color: var(--text-secondary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* Live Subsystem Status Pills */
+    .status-bar {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      flex-wrap: wrap;
+    }
+
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 9px;
+      border-radius: 999px;
+      background: rgba(15, 31, 56, 0.72);
+      border: 1px solid rgba(148, 184, 224, 0.16);
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--text-primary);
+      white-space: nowrap;
+      transition: border-color 0.2s ease, background 0.2s ease;
+    }
+
+    .status-pill:hover {
+      border-color: var(--border-cyan);
+      background: rgba(0, 229, 255, 0.1);
+    }
+
+    .status-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--emerald);
+      box-shadow: 0 0 8px var(--emerald);
+      animation: pulseDot 2.2s infinite ease-in-out;
+    }
+
+    .status-dot.cyan {
+      background: var(--cyan);
+      box-shadow: 0 0 8px var(--cyan);
+    }
+
+    @keyframes pulseDot {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.55; transform: scale(0.85); }
+    }
+
+    /* ================= SIDE PANELS ================= */
+    .side-panel {
+      position: fixed;
+      top: 78px;
+      bottom: 84px;
+      z-index: 15;
+      border-radius: var(--radius-lg);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.25s ease;
+    }
+
+    #left-panel {
+      left: 12px;
+      width: 282px;
+    }
+
+    #right-panel {
+      right: 12px;
+      width: 312px;
+    }
+
+    .panel-header {
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--border-subtle);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+
+    .panel-title {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--cyan);
+      display: flex;
+      align-items: center;
+      gap: 7px;
+    }
+
+    .panel-action-btn {
+      background: rgba(0, 229, 255, 0.1);
+      color: var(--cyan);
+      border: 1px solid rgba(0, 229, 255, 0.28);
+      border-radius: 6px;
+      padding: 4px 8px;
+      font-size: 11px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.18s ease;
+    }
+
+    .panel-action-btn:hover {
+      background: rgba(0, 229, 255, 0.22);
+      border-color: var(--cyan);
+    }
+
+    .panel-scroll {
+      flex: 1;
+      overflow-y: auto;
+      padding: 10px;
+      scrollbar-width: thin;
+      scrollbar-color: rgba(0, 229, 255, 0.3) transparent;
+    }
+
+    .panel-scroll::-webkit-scrollbar {
+      width: 5px;
+    }
+    .panel-scroll::-webkit-scrollbar-thumb {
+      background: rgba(0, 229, 255, 0.28);
+      border-radius: 10px;
+    }
+
+    /* Component List Items */
+    .component-list {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .comp-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 9px 10px;
+      border-radius: var(--radius-md);
+      background: rgba(15, 30, 54, 0.56);
+      border: 1px solid rgba(148, 184, 224, 0.12);
+      cursor: pointer;
+      transition: all 0.18s ease;
+    }
+
+    .comp-item:hover {
+      background: rgba(20, 42, 74, 0.78);
+      border-color: rgba(0, 229, 255, 0.35);
+    }
+
+    .comp-item.active {
+      background: linear-gradient(90deg, rgba(0, 229, 255, 0.18), rgba(0, 140, 255, 0.08));
+      border-color: var(--cyan);
+      box-shadow: 0 0 14px rgba(0, 229, 255, 0.14);
+    }
+
+    .comp-item.hidden-comp {
+      opacity: 0.48;
+    }
+
+    .comp-main {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      min-width: 0;
+      flex: 1;
+    }
+
+    .comp-badge {
+      width: 24px;
+      height: 24px;
+      border-radius: 6px;
+      background: rgba(0, 229, 255, 0.12);
+      border: 1px solid rgba(0, 229, 255, 0.28);
+      color: var(--cyan);
+      font-family: var(--font-mono);
+      font-size: 10px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .comp-item.active .comp-badge {
+      background: var(--cyan);
+      color: #04101f;
+    }
+
+    .comp-text {
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+    }
+
+    .comp-name {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-primary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .comp-tag {
+      font-size: 10px;
+      color: var(--text-secondary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .vis-btn {
+      width: 28px;
+      height: 28px;
+      border-radius: 7px;
+      border: 1px solid rgba(148, 184, 224, 0.18);
+      background: rgba(7, 16, 32, 0.65);
+      color: var(--text-secondary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      flex-shrink: 0;
+      transition: all 0.18s ease;
+    }
+
+    .vis-btn:hover {
+      color: var(--cyan);
+      border-color: var(--cyan);
+    }
+
+    .vis-btn.is-hidden {
+      color: #ef4444;
+      border-color: rgba(239, 68, 68, 0.4);
+      background: rgba(239, 68, 68, 0.1);
+    }
+
+    /* Right Panel: Inspector */
+    .inspector-card {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .inspector-ref-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .ref-chip {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      font-weight: 600;
+      color: var(--cyan);
+      background: var(--cyan-dim);
+      border: 1px solid rgba(0, 229, 255, 0.32);
+      padding: 3px 8px;
+      border-radius: 6px;
+      letter-spacing: 0.05em;
+    }
+
+    .status-chip {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      font-weight: 600;
+      color: var(--emerald);
+      background: rgba(16, 185, 129, 0.14);
+      border: 1px solid rgba(16, 185, 129, 0.35);
+      padding: 3px 8px;
+      border-radius: 6px;
+    }
+
+    .inspector-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--text-primary);
+      line-height: 1.25;
+    }
+
+    .inspector-section {
+      background: rgba(12, 26, 48, 0.62);
+      border: 1px solid rgba(148, 184, 224, 0.13);
+      border-radius: var(--radius-md);
+      padding: 10px 12px;
+    }
+
+    .inspector-label {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-muted);
+      margin-bottom: 4px;
+    }
+
+    .inspector-value {
+      font-size: 12.5px;
+      color: var(--text-primary);
+      line-height: 1.5;
+    }
+
+    .telemetry-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .telemetry-box {
+      background: rgba(7, 17, 34, 0.72);
+      border: 1px solid rgba(148, 184, 224, 0.12);
+      border-radius: 8px;
+      padding: 8px 10px;
+    }
+
+    .telemetry-k {
+      font-size: 10px;
+      color: var(--text-muted);
+      font-family: var(--font-mono);
+    }
+
+    .telemetry-v {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--cyan);
+      margin-top: 2px;
+    }
+
+    .inspector-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 2px;
+    }
+
+    .btn-primary {
+      flex: 1;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      padding: 9px 12px;
+      border-radius: var(--radius-md);
+      background: linear-gradient(135deg, rgba(0, 229, 255, 0.24), rgba(0, 140, 255, 0.24));
+      border: 1px solid var(--cyan);
+      color: var(--text-primary);
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .btn-primary:hover {
+      background: linear-gradient(135deg, rgba(0, 229, 255, 0.36), rgba(0, 140, 255, 0.36));
+      box-shadow: 0 0 16px rgba(0, 229, 255, 0.25);
+    }
+
+    .btn-secondary {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 9px 12px;
+      border-radius: var(--radius-md);
+      background: rgba(15, 31, 56, 0.72);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-secondary);
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .btn-secondary:hover {
+      color: var(--text-primary);
+      border-color: var(--border-cyan);
+    }
+
+    .blueprint-note {
+      font-size: 10.5px;
+      color: var(--text-muted);
+      border-left: 2px solid rgba(0, 229, 255, 0.4);
+      padding-left: 8px;
+      line-height: 1.45;
+    }
+
+    /* ================= BOTTOM CONTROL BAR ================= */
+    #bottom-bar {
+      position: fixed;
+      bottom: 12px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 20;
+      border-radius: var(--radius-lg);
+      padding: 8px 12px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      max-width: calc(100vw - 24px);
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+    #bottom-bar::-webkit-scrollbar { display: none; }
+
+    .control-group {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      flex-shrink: 0;
+    }
+
+    .control-divider {
+      width: 1px;
+      height: 26px;
+      background: var(--border-subtle);
+      flex-shrink: 0;
+    }
+
+    .ctrl-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      padding: 7px 10px;
+      border-radius: 8px;
+      background: rgba(14, 29, 52, 0.75);
+      border: 1px solid rgba(148, 184, 224, 0.16);
+      color: var(--text-secondary);
+      font-size: 11.5px;
+      font-weight: 500;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.18s ease;
+    }
+
+    .ctrl-btn:hover {
+      color: var(--text-primary);
+      border-color: rgba(0, 229, 255, 0.45);
+      background: rgba(0, 229, 255, 0.12);
+    }
+
+    .ctrl-btn.active {
+      color: #031120;
+      background: var(--cyan);
+      border-color: var(--cyan);
+      font-weight: 600;
+      box-shadow: 0 0 14px rgba(0, 229, 255, 0.35);
+    }
+
+    /* Exploded View Slider */
+    .explode-wrap {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 4px 10px;
+      border-radius: 8px;
+      background: rgba(14, 29, 52, 0.65);
+      border: 1px solid rgba(148, 184, 224, 0.16);
+    }
+
+    .explode-slider {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 88px;
+      height: 4px;
+      border-radius: 99px;
+      background: rgba(148, 184, 224, 0.25);
+      outline: none;
+      cursor: pointer;
+    }
+
+    .explode-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: var(--cyan);
+      box-shadow: 0 0 10px rgba(0, 229, 255, 0.6);
+      cursor: pointer;
+    }
+
+    .explode-pct {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--cyan);
+      min-width: 34px;
+      text-align: right;
+    }
+
+    /* Mobile Drawer Toggles */
+    .mobile-toggles {
+      display: none;
+      position: fixed;
+      top: 76px;
+      left: 12px;
+      right: 12px;
+      z-index: 18;
+      justify-content: space-between;
+      pointer-events: none;
+    }
+
+    .mobile-toggle-btn {
+      pointer-events: auto;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 12px;
+      border-radius: 10px;
+      font-size: 11.5px;
+      font-weight: 600;
+      color: var(--text-primary);
+      cursor: pointer;
+    }
+
+    /* Hover Tooltip for 3D Picking */
+    #hover-tooltip {
+      position: fixed;
+      z-index: 30;
+      pointer-events: none;
+      padding: 5px 10px;
+      border-radius: 7px;
+      background: rgba(5, 13, 27, 0.92);
+      border: 1px solid var(--cyan);
+      color: var(--text-primary);
+      font-size: 11.5px;
+      font-weight: 500;
+      white-space: nowrap;
+      opacity: 0;
+      transform: translate(-50%, -135%);
+      transition: opacity 0.14s ease;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5);
+    }
+
+    #hover-tooltip.visible {
+      opacity: 1;
+    }
+
+    /* Loading Overlay */
+    #loading-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 100;
+      background: radial-gradient(circle at 50% 45%, #0c1f3d 0%, #040a15 100%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      transition: opacity 0.5s ease, visibility 0.5s ease;
+    }
+
+    #loading-overlay.hidden {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+    }
+
+    .loader-ring {
+      width: 54px;
+      height: 54px;
+      border-radius: 50%;
+      border: 3px solid rgba(0, 229, 255, 0.16);
+      border-top-color: var(--cyan);
+      animation: spin 0.9s linear infinite;
+      box-shadow: 0 0 24px rgba(0, 229, 255, 0.25);
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .loader-title {
+      font-family: var(--font-mono);
+      font-size: 13px;
+      letter-spacing: 0.14em;
+      color: var(--cyan);
+      font-weight: 600;
+    }
+
+    .loader-sub {
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
+
+    /* WebGL Fallback */
+    #webgl-fallback {
+      position: fixed;
+      inset: 0;
+      z-index: 120;
+      background: var(--bg-deep);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    .fallback-card {
+      max-width: 440px;
+      padding: 26px;
+      border-radius: var(--radius-lg);
+      text-align: center;
+    }
+
+    /* Responsive Breakpoints */
+    @media (max-width: 1120px) {
+      .status-bar { display: none; }
+      #left-panel { width: 250px; }
+      #right-panel { width: 274px; }
+    }
+
+    @media (max-width: 860px) {
+      #top-header {
+        top: 8px;
+        left: 8px;
+        right: 8px;
+        padding: 8px 12px;
+      }
+      .brand-subtitle { display: none; }
+      .mobile-toggles {
+        display: flex;
+        top: 66px;
+      }
+      .side-panel {
+        top: 112px;
+        bottom: 78px;
+        width: calc(100vw - 24px);
+        max-width: 320px;
+        background: var(--panel-bg-strong);
+      }
+      #left-panel {
+        left: 12px;
+        transform: translateX(-115%);
+        opacity: 0;
+        pointer-events: none;
+      }
+      #left-panel.mobile-open {
+        transform: translateX(0);
+        opacity: 1;
+        pointer-events: auto;
+      }
+      #right-panel {
+        right: 12px;
+        transform: translateX(115%);
+        opacity: 0;
+        pointer-events: none;
+      }
+      #right-panel.mobile-open {
+        transform: translateX(0);
+        opacity: 1;
+        pointer-events: auto;
+      }
+      #bottom-bar {
+        bottom: 8px;
+        padding: 6px 8px;
+        gap: 6px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Loading Screen -->
+  <div id="loading-overlay">
+    <div class="loader-ring"></div>
+    <div class="loader-title">RE-BOATS 3D CAD ENGINE</div>
+    <div class="loader-sub">Generating catamaran geometry, PBR materials &amp; lake simulation...</div>
+  </div>
+
+  <!-- WebGL Fallback -->
+  <div id="webgl-fallback">
+    <div class="glass-panel fallback-card">
+      <h2 style="color: var(--cyan); margin-bottom: 10px;">WebGL Unavailable</h2>
+      <p style="color: var(--text-secondary); font-size: 13px;">
+        Your browser or graphics driver does not support WebGL rendering required for the RE-BOATS 3D Engineering Visualization. Please enable hardware acceleration or use a modern browser.
+      </p>
+    </div>
+  </div>
+
+  <!-- 3D WebGL Canvas Container -->
+  <div id="canvas-container"></div>
+
+  <!-- 3D Hover Tooltip -->
+  <div id="hover-tooltip"></div>
+
+  <!-- Top Engineering Header -->
+  <header id="top-header" class="glass-panel">
+    <div class="brand-group">
+      <div class="brand-logo" aria-hidden="true">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#00e5ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M2 18c2-1.5 4-1.5 6 0s4 1.5 6 0 4-1.5 6 0"/>
+          <path d="M4 14l2-7h12l2 7"/>
+          <path d="M9 7V4h6v3"/>
+        </svg>
+      </div>
+      <div class="brand-titles">
+        <div class="brand-title">
+          <span>RE-BOATS</span>
+          <span style="color: rgba(148,184,224,0.35)">|</span>
+          <span class="accent">3D ENGINEERING VISUALIZATION</span>
+        </div>
+        <div class="brand-subtitle">Autonomous Catamaran Waste-Collecting &amp; Water-Monitoring Boat &bull; Blueprint Ref: RE-01-A</div>
+      </div>
+    </div>
+
+    <div class="status-bar" aria-label="Subsystem Status Indicators">
+      <div class="status-pill"><span class="status-dot"></span>Solar Power System</div>
+      <div class="status-pill"><span class="status-dot"></span>Battery System</div>
+      <div class="status-pill"><span class="status-dot cyan"></span>AI Trash Detection</div>
+      <div class="status-pill"><span class="status-dot cyan"></span>Water Quality Monitoring</div>
+      <div class="status-pill"><span class="status-dot"></span>Electric Propulsion</div>
+    </div>
+  </header>
+
+  <!-- Mobile Drawer Buttons -->
+  <div class="mobile-toggles">
+    <button id="btn-mobile-left" class="glass-panel mobile-toggle-btn" type="button">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#00e5ff" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      Components
+    </button>
+    <button id="btn-mobile-right" class="glass-panel mobile-toggle-btn" type="button">
+      Inspector
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#00e5ff" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+    </button>
+  </div>
+
+  <!-- Left Panel: Components List -->
+  <aside id="left-panel" class="glass-panel side-panel" aria-label="Component Hierarchy">
+    <div class="panel-header">
+      <div class="panel-title">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
+        Components (8)
+      </div>
+      <button id="btn-show-all" class="panel-action-btn" type="button">Show All</button>
+    </div>
+    <div class="panel-scroll">
+      <div id="component-list" class="component-list"></div>
+    </div>
+  </aside>
+
+  <!-- Right Panel: Component Inspector -->
+  <aside id="right-panel" class="glass-panel side-panel" aria-label="Component Inspector">
+    <div class="panel-header">
+      <div class="panel-title">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        Component Inspector
+      </div>
+      <button id="btn-clear-selection" class="panel-action-btn" type="button">Overview</button>
+    </div>
+    <div class="panel-scroll">
+      <div id="inspector-content" class="inspector-card"></div>
+    </div>
+  </aside>
+
+  <!-- Bottom Control Bar -->
+  <nav id="bottom-bar" class="glass-panel" aria-label="3D Viewport Controls">
+    <div class="control-group" role="group" aria-label="Camera Presets">
+      <button class="ctrl-btn active" data-cam="iso" type="button">Isometric</button>
+      <button class="ctrl-btn" data-cam="top" type="button">Top</button>
+      <button class="ctrl-btn" data-cam="front" type="button">Front</button>
+      <button class="ctrl-btn" data-cam="side" type="button">Side</button>
+      <button class="ctrl-btn" data-cam="rear" type="button">Rear</button>
+      <button class="ctrl-btn" data-cam="underwater" type="button">Underwater</button>
+      <button class="ctrl-btn" data-cam="reset" type="button" title="Reset Camera">Reset</button>
+    </div>
+
+    <div class="control-divider"></div>
+
+    <div class="control-group">
+      <button id="btn-explode" class="ctrl-btn" type="button">Exploded View</button>
+      <div class="explode-wrap" title="Exploded Assembly Separation">
+        <input id="explode-slider" class="explode-slider" type="range" min="0" max="100" value="0" />
+        <span id="explode-pct" class="explode-pct">0%</span>
+      </div>
+    </div>
+
+    <div class="control-divider"></div>
+
+    <div class="control-group">
+      <button id="btn-env" class="ctrl-btn active" type="button" title="Toggle Lake Simulation vs CAD Studio">Lake Sim</button>
+      <button id="btn-anim" class="ctrl-btn active" type="button" title="Pause or Resume Motion">Animating</button>
+    </div>
+  </nav>
+
+  <!-- Three.js Application Module -->
+  <script type="module">
+    import * as THREE from 'three';
+    import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+    import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+
+    // =========================================================================
+    // 1. WEBGL AVAILABILITY CHECK
+    // =========================================================================
+    function isWebGLAvailable() {
+      try {
+        const canvas = document.createElement('canvas');
+        return !!(window.WebGLRenderingContext && (canvas.getContext('webgl2') || canvas.getContext('webgl')));
+      } catch (e) {
+        return false;
+      }
+    }
+
+    if (!isWebGLAvailable()) {
+      document.getElementById('loading-overlay').classList.add('hidden');
+      document.getElementById('webgl-fallback').style.display = 'flex';
+      throw new Error('WebGL is not supported on this device.');
+    }
+
+    // =========================================================================
+    // 2. COMPONENT METADATA (STRICTLY ALIGNED WITH BLUEPRINT RE-01-A)
+    // =========================================================================
+    const COMPONENT_DATA = {
+      overview: {
+        id: 'overview',
+        ref: 'RE-01-A',
+        badge: 'OV',
+        name: 'RE-BOATS Autonomous Catamaran',
+        shortTag: 'Complete Vessel Assembly',
+        status: 'ACTIVE PROTOTYPE',
+        functionText: 'Autonomous surface waste collection and real-time lake water quality monitoring powered by solar-electric propulsion.',
+        description: 'Twin-hull catamaran platform featuring a recessed forward waste-intake channel, AI optical detection mast, inclined conveyor belt, floating perforated collection basket, twin rooftop photovoltaic arrays, central electronics/battery bay, shrouded electric thrusters, and underwater water-quality sensor suite.',
+        specs: [
+          { k: 'ARCHITECTURE', v: 'Twin-Hull Catamaran' },
+          { k: 'ENERGY', v: 'Solar PV + LiFePO4' },
+          { k: 'NAVIGATION', v: 'Autonomous / AI Vision' },
+          { k: 'SCALE NOTE', v: 'Visual Blueprint Ratio' }
+        ],
+        focusOffset: new THREE.Vector3(6.8, 4.4, 7.2),
+        focusTarget: new THREE.Vector3(0, 0.35, 0.2)
+      },
+      hull: {
+        id: 'hull',
+        ref: 'STRUCT-00',
+        badge: '00',
+        name: 'Twin Catamaran Hulls & Bridge Deck',
+        shortTag: 'Parallel Twin-Hull Structure',
+        status: 'STRUCTURAL',
+        functionText: 'Provides high lateral stability, shallow-draft buoyancy, and an unobstructed central channel for surface debris intake.',
+        description: 'Symmetrical parallel twin hulls with sharp wave-piercing bows, planing undersides, navy-blue lower chines, white composite topsides, and metallic trim. Connected by a raised mid-ship bridge deck housing the central electronics bay.',
+        specs: [
+          { k: 'HULL FORM', v: 'Symmetrical Twin-Hull' },
+          { k: 'CHANNEL', v: 'Open Forward Intake' },
+          { k: 'FINISH', v: 'White / Navy / Alloy' },
+          { k: 'STABILITY', v: 'High Roll Resistance' }
+        ],
+        explodeOffset: new THREE.Vector3(0, 0, 0),
+        focusOffset: new THREE.Vector3(6.2, 3.6, 6.4),
+        focusTarget: new THREE.Vector3(0, 0.3, 0.0)
+      },
+      cameraMast: {
+        id: 'cameraMast',
+        ref: 'BP REF #1',
+        badge: '01',
+        name: 'Front Camera Mast (AI Trash Detection)',
+        shortTag: 'Port Bow Optical AI Mast',
+        status: 'AI VISION ONLINE',
+        functionText: 'Detects, classifies, and tracks floating lake debris ahead of the vessel to guide autonomous steering toward waste clusters.',
+        description: 'Mounted on the forward port bow deck as specified in blueprint RE-01-A. Features a reinforced vertical alloy mast, gusseted base flange, top navigation dome, horizontal crossbar, and downward-angled stereo AI camera pods with weather shields.',
+        specs: [
+          { k: 'MOUNTING', v: 'Port Forward Bow' },
+          { k: 'OPTICS', v: 'Stereo AI Vision Pods' },
+          { k: 'TARGET ZONE', v: 'Forward Intake Arc' },
+          { k: 'STATUS LED', v: 'Active Cyan Telemetry' }
+        ],
+        explodeOffset: new THREE.Vector3(0.45, 1.45, 0.55),
+        focusOffset: new THREE.Vector3(2.8, 2.3, 4.6),
+        focusTarget: new THREE.Vector3(1.18, 1.25, 2.35)
+      },
+      conveyor: {
+        id: 'conveyor',
+        ref: 'BP REF #2',
+        badge: '02',
+        name: 'Front Conveyor Belt (Waste Intake)',
+        shortTag: 'Inclined Cleated Intake',
+        status: 'INTAKE RUNNING',
+        functionText: 'Lifts floating plastics, bottles, and organic debris directly from the lake surface up into the collection basket.',
+        description: 'Positioned centrally between the twin bows, extending forward beyond the bow tips into the waterline. Built with metallic structural side rails, lower intake & upper drive rollers, electric drive motor, and a textured dark rubber belt with V-chevron cleats.',
+        specs: [
+          { k: 'BELT TYPE', v: 'Cleated Chevron Belt' },
+          { k: 'DRIVE', v: 'Upper Electric Roller' },
+          { k: 'POSITION', v: 'Center Forward Channel' },
+          { k: 'OPERATION', v: 'Continuous Skimming' }
+        ],
+        explodeOffset: new THREE.Vector3(0, 0.95, 1.65),
+        focusOffset: new THREE.Vector3(3.1, 1.9, 5.2),
+        focusTarget: new THREE.Vector3(0, 0.35, 2.95)
+      },
+      basket: {
+        id: 'basket',
+        ref: 'BP REF #3',
+        badge: '03',
+        name: 'Floating Trash Collection Basket',
+        shortTag: 'Perforated Mesh Hopper',
+        status: 'COLLECTING',
+        functionText: 'Captures and stores debris discharged from the conveyor belt while allowing lake water to drain freely through its mesh walls.',
+        description: 'Nestled directly behind and beneath the upper discharge end of the front conveyor inside the forward central bay. Constructed with a rigid alloy frame and perforated wire-mesh walls resting at the waterline for easy emptying.',
+        specs: [
+          { k: 'STRUCTURE', v: 'Perforated Wire Mesh' },
+          { k: 'LOCATION', v: 'Forward-Mid Central Bay' },
+          { k: 'DRAINAGE', v: 'Passive Waterline Flow' },
+          { k: 'ACCESS', v: 'Removable Top-Lift' }
+        ],
+        explodeOffset: new THREE.Vector3(0, -1.15, 0.85),
+        focusOffset: new THREE.Vector3(2.8, 2.2, 3.1),
+        focusTarget: new THREE.Vector3(0, 0.15, 1.15)
+      },
+      solarPanels: {
+        id: 'solarPanels',
+        ref: 'BP REF #4',
+        badge: '04',
+        name: 'Rooftop Solar Panels (PV Array)',
+        shortTag: 'Dual Parallel PV Wings',
+        status: 'CHARGING PV',
+        functionText: 'Harvests solar energy to continuously recharge the onboard battery bank and extend autonomous lake mission endurance.',
+        description: 'Dual parallel monocrystalline photovoltaic arrays mounted along the upper port and starboard superstructure wings flanking the central bay. Features dark navy silicon cells, silver busbars, anodized aluminum framing, and reflective tempered glass.',
+        specs: [
+          { k: 'LAYOUT', v: 'Twin Port/Starboard Arrays' },
+          { k: 'CELL TYPE', v: 'Monocrystalline Dark PV' },
+          { k: 'SURFACE', v: 'Clearcoat Tempered Glass' },
+          { k: 'INTEGRATION', v: 'Flush Rooftop Mount' }
+        ],
+        explodeOffset: new THREE.Vector3(0, 1.75, 0),
+        focusOffset: new THREE.Vector3(4.2, 4.1, 2.8),
+        focusTarget: new THREE.Vector3(0, 1.05, -0.55)
+      },
+      electronicsBay: {
+        id: 'electronicsBay',
+        ref: 'BP REF #5',
+        badge: '05',
+        name: 'Central Electronics & Battery Bay',
+        shortTag: 'Mid-Ship Power & Autonomy',
+        status: 'NOMINAL 96%',
+        functionText: 'Houses the modular LiFePO4 battery packs, autonomous navigation computer, solar charge controller, and power distribution bus.',
+        description: 'Centrally located between the twin solar arrays under a tinted transparent polycarbonate inspection hatch. Contains four modular battery packs in a 2×2 layout, dual autonomy/control units, aluminum heatsinks, and sealed cable conduits.',
+        specs: [
+          { k: 'BATTERY BANK', v: '4× Modular LiFePO4 Packs' },
+          { k: 'COMPUTE', v: 'AI & Autonomy Controller' },
+          { k: 'ENCLOSURE', v: 'Clear Inspection Hatch' },
+          { k: 'PROTECTION', v: 'Sealed Gasketed Bay' }
+        ],
+        explodeOffset: new THREE.Vector3(0, 1.15, 0),
+        focusOffset: new THREE.Vector3(2.8, 2.9, 2.2),
+        focusTarget: new THREE.Vector3(0, 0.85, -0.55)
+      },
+      thrusters: {
+        id: 'thrusters',
+        ref: 'BP REF #6',
+        badge: '06',
+        name: 'Rear Shrouded Thrusters',
+        shortTag: 'Dual Stern Electric Drives',
+        status: 'PROPULSION READY',
+        functionText: 'Delivers differential electric thrust for smooth forward propulsion, zero-radius turning, and station-keeping during waste collection.',
+        description: 'Twin brushless electric thrusters mounted at the stern of each hull. Each unit incorporates a protective hydrodynamic Kort shroud to prevent debris entanglement, stator struts, sealed motor housing, underwater skeg, and a 4-blade propeller.',
+        specs: [
+          { k: 'PROPULSION', v: 'Dual Differential Electric' },
+          { k: 'PROTECTION', v: 'Shrouded Kort Nozzles' },
+          { k: 'PROPELLER', v: '4-Blade High-Torque' },
+          { k: 'MOUNTING', v: 'Port & Starboard Sterns' }
+        ],
+        explodeOffset: new THREE.Vector3(0, -0.15, -1.65),
+        focusOffset: new THREE.Vector3(3.6, 1.5, -5.6),
+        focusTarget: new THREE.Vector3(0, -0.05, -3.05)
+      },
+      sensors: {
+        id: 'sensors',
+        ref: 'BP REF #7',
+        badge: '07',
+        name: 'Underwater Water Quality Sensors',
+        shortTag: 'pH • Turbidity • Temp • DO',
+        status: 'SAMPLING LIVE',
+        functionText: 'Continuously measures lake water health parameters below the waterline and transmits geo-tagged telemetry.',
+        description: 'Mounted beneath the central hull aft of the collection basket, extending below the waterline inside a protective stainless guard cage. Integrates four distinct submerged probes: pH (emerald), Turbidity (amber), Temperature (coral), and Dissolved Oxygen (cyan).',
+        specs: [
+          { k: 'PROBES', v: 'pH, Turbidity, Temp, DO' },
+          { k: 'POSITION', v: 'Submerged Mid-Forward' },
+          { k: 'GUARD', v: 'Stainless Protection Cage' },
+          { k: 'LOGGING', v: 'Continuous Telemetry' }
+        ],
+        explodeOffset: new THREE.Vector3(0, -1.55, 0),
+        focusOffset: new THREE.Vector3(2.9, -0.85, 2.4),
+        focusTarget: new THREE.Vector3(0, -0.52, 0.35)
+      }
+    };
+
+    const COMPONENT_ORDER = [
+      'hull',
+      'cameraMast',
+      'conveyor',
+      'basket',
+      'solarPanels',
+      'electronicsBay',
+      'thrusters',
+      'sensors'
+    ];
+
+    // =========================================================================
+    // 3. PROCEDURAL CANVAS TEXTURES (NO EXTERNAL IMAGE DEPENDENCIES)
+    // =========================================================================
+    function createSolarPanelTexture() {
+      const canvas = document.createElement('canvas');
+      canvas.width = 1024;
+      canvas.height = 512;
+      const ctx = canvas.getContext('2d');
+
+      // Deep silicon navy base
+      ctx.fillStyle = '#071733';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      // Subtle silicon gradient sheen
+      const grad = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+      grad.addColorStop(0, 'rgba(18, 64, 138, 0.42)');
+      grad.addColorStop(0.5, 'rgba(6, 28, 68, 0.2)');
+      grad.addColorStop(1, 'rgba(22, 82, 165, 0.38)');
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      const cols = 18;
+      const rows = 6;
+      const cellW = canvas.width / cols;
+      const cellH = canvas.height / rows;
+
+      for (let r = 0; r < rows; r++) {
+        for (let c = 0; c < cols; c++) {
+          const x = c * cellW;
+          const y = r * cellH;
+          // Cell body
+          ctx.fillStyle = (c + r) % 2 === 0 ? '#0a1f47' : '#0b224d';
+          ctx.fillRect(x + 2, y + 2, cellW - 4, cellH - 4);
+
+          // Micro busbars inside each silicon wafer
+          ctx.strokeStyle = 'rgba(180, 215, 255, 0.28)';
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.moveTo(x + cellW * 0.33, y + 2);
+          ctx.lineTo(x + cellW * 0.33, y + cellH - 2);
+          ctx.moveTo(x + cellW * 0.66, y + 2);
+          ctx.lineTo(x + cellW * 0.66, y + cellH - 2);
+          ctx.stroke();
+
+          // Fine horizontal fingers
+          ctx.strokeStyle = 'rgba(140, 190, 255, 0.1)';
+          for (let f = 1; f < 5; f++) {
+            ctx.beginPath();
+            ctx.moveTo(x + 3, y + (cellH / 5) * f);
+            ctx.lineTo(x + cellW - 3, y + (cellH / 5) * f);
+            ctx.stroke();
+          }
+
+          // White/silver cell corner chamfer diamond
+          ctx.fillStyle = 'rgba(205, 228, 255, 0.45)';
+          ctx.beginPath();
+          ctx.moveTo(x, y + 4);
+          ctx.lineTo(x + 4, y);
+          ctx.lineTo(x, y - 4);
+          ctx.lineTo(x - 4, y);
+          ctx.closePath();
+          ctx.fill();
+        }
+      }
+
+      // Panel module dividers (3 modules along length)
+      ctx.strokeStyle = '#c8d6e8';
+      ctx.lineWidth = 6;
+      for (let m = 1; m < 3; m++) {
+        const mx = (canvas.width / 3) * m;
+        ctx.beginPath();
+        ctx.moveTo(mx, 0);
+        ctx.lineTo(mx, canvas.height);
+        ctx.stroke();
+      }
+
+      // Outer border
+      ctx.strokeStyle = '#b9c9dd';
+      ctx.lineWidth = 10;
+      ctx.strokeRect(0, 0, canvas.width, canvas.height);
+
+      const tex = new THREE.CanvasTexture(canvas);
+      tex.colorSpace = THREE.SRGBColorSpace;
+      tex.anisotropy = 8;
+      return tex;
+    }
+
+    function createWireMeshTexture() {
+      const canvas = document.createElement('canvas');
+      canvas.width = 256;
+      canvas.height = 256;
+      const ctx = canvas.getContext('2d');
+
+      ctx.clearRect(0, 0, 256, 256);
+
+      // Draw crisp perforated metal grid
+      ctx.fillStyle = '#9aaec4';
+      const step = 16;
+      const wire = 3;
+      for (let i = 0; i <= 256; i += step) {
+        ctx.fillRect(i, 0, wire, 256);
+        ctx.fillRect(0, i, 256, wire);
+      }
+
+      // Subtle inner highlight
+      ctx.fillStyle = '#d3e1f0';
+      for (let i = 0; i <= 256; i += step) {
+        ctx.fillRect(i, 0, 1, 256);
+        ctx.fillRect(0, i, 256, 1);
+      }
+
+      const tex = new THREE.CanvasTexture(canvas);
+      tex.wrapS = THREE.RepeatWrapping;
+      tex.wrapT = THREE.RepeatWrapping;
+      tex.repeat.set(3, 2);
+      tex.colorSpace = THREE.SRGBColorSpace;
+      return tex;
+    }
+
+    function createConveyorBeltTexture() {
+      const canvas = document.createElement('canvas');
+      canvas.width = 256;
+      canvas.height = 512;
+      const ctx = canvas.getContext('2d');
+
+      // Dark textured rubber belt
+      ctx.fillStyle = '#1b2028';
+      ctx.fillRect(0, 0, 256, 512);
+
+      // Subtle rubber grain lines
+      ctx.fillStyle = '#232a35';
+      for (let y = 0; y < 512; y += 8) {
+        ctx.fillRect(0, y, 256, 2);
+      }
+
+      // Chevron grip ribs matching blueprint top view
+      ctx.strokeStyle = '#3c4657';
+      ctx.lineWidth = 10;
+      ctx.lineCap = 'round';
+      for (let y = -64; y < 576; y += 64) {
+        ctx.beginPath();
+        ctx.moveTo(16, y + 32);
+        ctx.lineTo(128, y);
+        ctx.lineTo(240, y + 32);
+        ctx.stroke();
+
+        ctx.strokeStyle = '#536178';
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.moveTo(16, y + 29);
+        ctx.lineTo(128, y - 3);
+        ctx.lineTo(240, y + 29);
+        ctx.stroke();
+        ctx.strokeStyle = '#3c4657';
+        ctx.lineWidth = 10;
+      }
+
+      const tex = new THREE.CanvasTexture(canvas);
+      tex.wrapS = THREE.RepeatWrapping;
+      tex.wrapT = THREE.RepeatWrapping;
+      tex.repeat.set(1, 3.2);
+      tex.colorSpace = THREE.SRGBColorSpace;
+      return tex;
+    }
+
+    function createSkyDomeTexture() {
+      const canvas = document.createElement('canvas');
+      canvas.width = 1024;
+      canvas.height = 512;
+      const ctx = canvas.getContext('2d');
+
+      // Natural daytime lake sky gradient
+      const grad = ctx.createLinearGradient(0, 0, 0, 512);
+      grad.addColorStop(0.0, '#0d2b57');
+      grad.addColorStop(0.32, '#2d6ea8');
+      grad.addColorStop(0.50, '#7db6de');
+      grad.addColorStop(0.55, '#cde4f5');
+      grad.addColorStop(0.60, '#2a5a78');
+      grad.addColorStop(1.0, '#0a1f36');
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, 1024, 512);
+
+      // Soft sun glow
+      const sunGrad = ctx.createRadialGradient(740, 195, 10, 740, 195, 160);
+      sunGrad.addColorStop(0, 'rgba(255, 252, 238, 0.95)');
+      sunGrad.addColorStop(0.25, 'rgba(255, 238, 196, 0.45)');
+      sunGrad.addColorStop(1, 'rgba(255, 238, 196, 0)');
+      ctx.fillStyle = sunGrad;
+      ctx.fillRect(540, 30, 400, 340);
+
+      // Distant hazy lakeside mountains silhouette right along horizon
+      ctx.fillStyle = '#355873';
+      ctx.beginPath();
+      ctx.moveTo(0, 286);
+      for (let x = 0; x <= 1024; x += 16) {
+        const h = Math.sin(x * 0.012) * 18 + Math.sin(x * 0.031 + 1.2) * 9 + Math.cos(x * 0.007) * 14;
+        ctx.lineTo(x, 268 - Math.abs(h));
+      }
+      ctx.lineTo(1024, 295);
+      ctx.lineTo(0, 295);
+      ctx.closePath();
+      ctx.fill();
+
+      // Closer treeline band
+      ctx.fillStyle = '#203c52';
+      ctx.beginPath();
+      ctx.moveTo(0, 290);
+      for (let x = 0; x <= 1024; x += 8) {
+        const h = Math.sin(x * 0.045) * 4 + Math.cos(x * 0.11) * 3;
+        ctx.lineTo(x, 276 - Math.abs(h));
+      }
+      ctx.lineTo(1024, 296);
+      ctx.lineTo(0, 296);
+      ctx.closePath();
+      ctx.fill();
+
+      const tex = new THREE.CanvasTexture(canvas);
+      tex.colorSpace = THREE.SRGBColorSpace;
+      return tex;
+    }
+
+    // =========================================================================
+    // 4. SCENE, RENDERER, CAMERA & LIGHTING SETUP
+    // =========================================================================
+    const container = document.getElementById('canvas-container');
+    const scene = new THREE.Scene();
+    scene.fog = new THREE.FogExp2(0x132c47, 0.014);
+
+    const camera = new THREE.PerspectiveCamera(42, window.innerWidth / window.innerHeight, 0.1, 220);
+    camera.position.set(6.8, 4.4, 7.2);
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.08;
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    container.appendChild(renderer.domElement);
+
+    // Procedural PBR Environment Map for realistic metallic & glass reflections
+    const pmremGenerator = new THREE.PMREMGenerator(renderer);
+    const roomEnv = new RoomEnvironment();
+    const envRT = pmremGenerator.fromScene(roomEnv, 0.04);
+    scene.environment = envRT.texture;
+    roomEnv.dispose();
+
+    // OrbitControls
+    const controls = new OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.06;
+    controls.minDistance = 2.0;
+    controls.maxDistance = 24.0;
+    controls.maxPolarAngle = Math.PI * 0.92; // Allows underwater inspection
+    controls.target.set(0, 0.35, 0.2);
+
+    // Natural Sun & Sky Lighting
+    const hemiLight = new THREE.HemisphereLight(0xcbe8ff, 0x163c54, 0.95);
+    scene.add(hemiLight);
+
+    const sunLight = new THREE.DirectionalLight(0xfff7e8, 2.35);
+    sunLight.position.set(11, 16, 9);
+    sunLight.castShadow = true;
+    sunLight.shadow.mapSize.width = 2048;
+    sunLight.shadow.mapSize.height = 2048;
+    sunLight.shadow.camera.near = 2;
+    sunLight.shadow.camera.far = 42;
+    const d = 8.5;
+    sunLight.shadow.camera.left = -d;
+    sunLight.shadow.camera.right = d;
+    sunLight.shadow.camera.top = d;
+    sunLight.shadow.camera.bottom = -d;
+    sunLight.shadow.bias = -0.0004;
+    scene.add(sunLight);
+
+    // Subtle cool cyan rim light for industrial engineering clarity
+    const rimLight = new THREE.DirectionalLight(0x66d9ff, 0.75);
+    rimLight.position.set(-9, 5, -10);
+    scene.add(rimLight);
+
+    // Underwater fill light so submerged sensors & lower hulls remain readable
+    const underLight = new THREE.PointLight(0x00d5ff, 1.2, 10);
+    underLight.position.set(0, -1.8, 0.5);
+    scene.add(underLight);
+
+    // =========================================================================
+    // 5. SHARED PBR MATERIALS
+    // =========================================================================
+    const materials = {
+      hullWhite: new THREE.MeshPhysicalMaterial({
+        color: 0xf1f5fa,
+        roughness: 0.24,
+        metalness: 0.06,
+        clearcoat: 0.75,
+        clearcoatRoughness: 0.16
+      }),
+      hullNavy: new THREE.MeshPhysicalMaterial({
+        color: 0x0e294d,
+        roughness: 0.3,
+        metalness: 0.12,
+        clearcoat: 0.55,
+        clearcoatRoughness: 0.22
+      }),
+      deckGray: new THREE.MeshStandardMaterial({
+        color: 0xcbd5e1,
+        roughness: 0.58,
+        metalness: 0.12
+      }),
+      alloy: new THREE.MeshStandardMaterial({
+        color: 0x9aa8b8,
+        roughness: 0.32,
+        metalness: 0.82
+      }),
+      darkMetal: new THREE.MeshStandardMaterial({
+        color: 0x263242,
+        roughness: 0.42,
+        metalness: 0.72
+      }),
+      rubber: new THREE.MeshStandardMaterial({
+        color: 0x1a2029,
+        roughness: 0.85,
+        metalness: 0.05
+      }),
+      conveyorBelt: new THREE.MeshStandardMaterial({
+        map: createConveyorBeltTexture(),
+        roughness: 0.78,
+        metalness: 0.08
+      }),
+      solarGlass: new THREE.MeshPhysicalMaterial({
+        map: createSolarPanelTexture(),
+        roughness: 0.12,
+        metalness: 0.15,
+        clearcoat: 1.0,
+        clearcoatRoughness: 0.06,
+        reflectivity: 0.95
+      }),
+      wireMesh: new THREE.MeshStandardMaterial({
+        map: createWireMeshTexture(),
+        transparent: true,
+        alphaTest: 0.25,
+        side: THREE.DoubleSide,
+        roughness: 0.4,
+        metalness: 0.78
+      }),
+      acrylicCover: new THREE.MeshPhysicalMaterial({
+        color: 0x8be2ff,
+        transparent: true,
+        opacity: 0.32,
+        roughness: 0.08,
+        metalness: 0.05,
+        transmission: 0.55,
+        ior: 1.48,
+        clearcoat: 1.0,
+        depthWrite: false
+      }),
+      cyanGlow: new THREE.MeshStandardMaterial({
+        color: 0x00e5ff,
+        emissive: 0x00e5ff,
+        emissiveIntensity: 1.4,
+        roughness: 0.2
+      }),
+      emeraldGlow: new THREE.MeshStandardMaterial({
+        color: 0x10b981,
+        emissive: 0x10b981,
+        emissiveIntensity: 1.2,
+        roughness: 0.25
+      }),
+      amberGlow: new THREE.MeshStandardMaterial({
+        color: 0xf59e0b,
+        emissive: 0xf59e0b,
+        emissiveIntensity: 1.2,
+        roughness: 0.25
+      }),
+      coralGlow: new THREE.MeshStandardMaterial({
+        color: 0xf43f5e,
+        emissive: 0xf43f5e,
+        emissiveIntensity: 1.2,
+        roughness: 0.25
+      }),
+      batteryCase: new THREE.MeshStandardMaterial({
+        color: 0x164e63,
+        roughness: 0.36,
+        metalness: 0.28
+      }),
+      pcbGreen: new THREE.MeshStandardMaterial({
+        color: 0x0c5938,
+        roughness: 0.45,
+        metalness: 0.22
+      })
+    };
+
+    // Helper: assign componentId recursively for raycasting & shadow casting
+    function tagComponent(group, compId) {
+      group.userData.componentId = compId;
+      group.traverse((child) => {
+        child.userData.componentId = compId;
+        if (child.isMesh) {
+          child.castShadow = true;
+          child.receiveShadow = true;
+        }
+      });
+    }
+
+    // =========================================================================
+    // 6. BUILD RE-BOATS 3D MODEL (STRICTLY FOLLOWING BLUEPRINT RE-01-A)
+    // Coordinate Convention: +Z = Bow (Front), -Z = Stern (Rear), +X = Port, -X = Starboard, Y = 0 Waterline
+    // =========================================================================
+    const boatRoot = new THREE.Group();
+    scene.add(boatRoot);
+
+    const componentGroups = {};
+    const animatedProps = {
+      propellers: [],
+      conveyorCleats: [],
+      floatingTrash: [],
+      bayCover: null,
+      solarLeft: null,
+      solarRight: null
+    };
+
+    // -------------------------------------------------------------------------
+    // ASSEMBLY 0: TWIN CATAMARAN HULLS & CENTRAL BRIDGE DECK
+    // -------------------------------------------------------------------------
+    function buildTwinHullAndDeck() {
+      const group = new THREE.Group();
+
+      // Create sleek catamaran hull profile in XZ plane, extruded vertically
+      // Blueprint top view: pointed sharp bow at +Z (z=3.55), parallel mid-section, gently tapered stern at -Z (z=-3.35)
+      function createHullHalfShape(widthHalf) {
+        const s = new THREE.Shape();
+        s.moveTo(0, 3.55); // Sharp bow tip
+        s.bezierCurveTo(widthHalf * 0.55, 2.85, widthHalf, 1.95, widthHalf, 1.15);
+        s.lineTo(widthHalf, -2.05);
+        s.bezierCurveTo(widthHalf, -2.65, widthHalf * 0.78, -3.1, widthHalf * 0.68, -3.32);
+        s.lineTo(-widthHalf * 0.68, -3.32);
+        s.bezierCurveTo(-widthHalf * 0.78, -3.1, -widthHalf, -2.65, -widthHalf, -2.05);
+        s.lineTo(-widthHalf, 1.15);
+        s.bezierCurveTo(-widthHalf, 1.95, -widthHalf * 0.55, 2.85, 0, 3.55);
+        return s;
+      }
+
+      const upperHullGeom = new THREE.ExtrudeGeometry(createHullHalfShape(0.38), {
+        depth: 0.42,
+        bevelEnabled: true,
+        bevelThickness: 0.045,
+        bevelSize: 0.035,
+        bevelSegments: 3
+      });
+      upperHullGeom.rotateX(-Math.PI / 2); // Extrude along +Y
+
+      const lowerHullGeom = new THREE.ExtrudeGeometry(createHullHalfShape(0.34), {
+        depth: 0.28,
+        bevelEnabled: true,
+        bevelThickness: 0.05,
+        bevelSize: 0.04,
+        bevelSegments: 3
+      });
+      lowerHullGeom.rotateX(-Math.PI / 2);
+
+      // Build Port (+X) and Starboard (-X) hulls
+      [-1.18, 1.18].forEach((xPos) => {
+        const hullUnit = new THREE.Group();
+        hullUnit.position.x = xPos;
+
+        const upperMesh = new THREE.Mesh(upperHullGeom, materials.hullWhite);
+        upperMesh.position.y = 0.05;
+        hullUnit.add(upperMesh);
+
+        const lowerMesh = new THREE.Mesh(lowerHullGeom, materials.hullNavy);
+        lowerMesh.position.y = -0.24;
+        hullUnit.add(lowerMesh);
+
+        // Dark metallic rub-rail trim strip along waterline/sheer
+        const trimGeom = new THREE.ExtrudeGeometry(createHullHalfShape(0.395), {
+          depth: 0.045,
+          bevelEnabled: false
+        });
+        trimGeom.rotateX(-Math.PI / 2);
+        const trimMesh = new THREE.Mesh(trimGeom, materials.darkMetal);
+        trimMesh.position.y = 0.43;
+        hullUnit.add(trimMesh);
+
+        // Stern recessed thruster cutout accent
+        const transomCap = new THREE.Mesh(new THREE.BoxGeometry(0.48, 0.36, 0.08), materials.darkMetal);
+        transomCap.position.set(0, 0.2, -3.33);
+        hullUnit.add(transomCap);
+
+        // Small deck mooring cleats at bow and stern
+        [2.45, -2.55].forEach((zCleat) => {
+          const cleat = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.04, 0.16), materials.alloy);
+          cleat.position.set(xPos > 0 ? 0.18 : -0.18, 0.53, zCleat);
+          hullUnit.add(cleat);
+        });
+
+        group.add(hullUnit);
+      });
+
+      // Central Bridge Deck connecting twin hulls (leaves forward channel open for conveyor & basket)
+      const mainBridge = new THREE.Mesh(new THREE.BoxGeometry(1.78, 0.24, 3.05), materials.hullWhite);
+      mainBridge.position.set(0, 0.36, -0.75);
+      group.add(mainBridge);
+
+      // Lower central structural keel / under-bridge fairing
+      const underBridge = new THREE.Mesh(new THREE.BoxGeometry(1.66, 0.18, 2.75), materials.hullNavy);
+      underBridge.position.set(0, 0.17, -0.75);
+      group.add(underBridge);
+
+      // Forward channel crossbeam & basket surround rails (matching blueprint top view)
+      const fwdCrossbar = new THREE.Mesh(new THREE.BoxGeometry(1.72, 0.14, 0.14), materials.alloy);
+      fwdCrossbar.position.set(0, 0.42, 1.88);
+      group.add(fwdCrossbar);
+
+      [-0.82, 0.82].forEach((xSide) => {
+        const channelWall = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.28, 1.28), materials.hullWhite);
+        channelWall.position.set(xSide, 0.34, 1.22);
+        group.add(channelWall);
+      });
+
+      // Raised Mid-Ship Superstructure (sloped forward brow matching side elevation view)
+      const superShape = new THREE.Shape();
+      superShape.moveTo(-2.35, 0.48); // Aft base
+      superShape.lineTo(-1.85, 0.92); // Aft slope up
+      superShape.lineTo(0.85, 0.92);  // Flat rooftop supporting solar arrays & electronics bay
+      superShape.lineTo(1.42, 0.48);  // Forward sloped brow
+      superShape.closePath();
+
+      const superGeom = new THREE.ExtrudeGeometry(superShape, {
+        depth: 2.86,
+        bevelEnabled: true,
+        bevelThickness: 0.03,
+        bevelSize: 0.03,
+        bevelSegments: 2
+      });
+      // Align shape X->Z, Y->Y, extrude depth along X
+      superGeom.rotateY(Math.PI / 2);
+      superGeom.translate(-1.43, 0, 0);
+
+      // Left & Right superstructure wings framing the central bay
+      const wingGeom = new THREE.ExtrudeGeometry(superShape, {
+        depth: 0.88,
+        bevelEnabled: true,
+        bevelThickness: 0.025,
+        bevelSize: 0.025,
+        bevelSegments: 2
+      });
+      wingGeom.rotateY(Math.PI / 2);
+
+      const portWing = new THREE.Mesh(wingGeom, materials.hullWhite);
+      portWing.position.set(0.62, 0, 0);
+      group.add(portWing);
+
+      const stbdWing = new THREE.Mesh(wingGeom, materials.hullWhite);
+      stbdWing.position.set(-1.50, 0, 0);
+      group.add(stbdWing);
+
+      // Central deck floor connecting wings beneath electronics bay
+      const centerFloor = new THREE.Mesh(new THREE.BoxGeometry(1.28, 0.14, 3.2), materials.deckGray);
+      centerFloor.position.set(0, 0.50, -0.55);
+      group.add(centerFloor);
+
+      // Subtle cyan accent stripe along superstructure sides
+      [-1.515, 1.515].forEach((xPos) => {
+        const stripe = new THREE.Mesh(new THREE.BoxGeometry(0.02, 0.045, 2.55), materials.cyanGlow);
+        stripe.position.set(xPos, 0.72, -0.5);
+        group.add(stripe);
+      });
+
+      // Aft deck step & transom cross-bridge
+      const aftDeck = new THREE.Mesh(new THREE.BoxGeometry(1.84, 0.12, 0.55), materials.deckGray);
+      aftDeck.position.set(0, 0.46, -2.42);
+      group.add(aftDeck);
+
+      tagComponent(group, 'hull');
+      return group;
+    }
+
+    // -------------------------------------------------------------------------
+    // COMPONENT 1: FRONT CAMERA MAST (AI TRASH DETECTION)
+    // -------------------------------------------------------------------------
+    function buildCameraMast() {
+      const group = new THREE.Group();
+      // Blueprint top & side view: mounted on port (+X) forward bow deck
+      group.position.set(1.18, 0.50, 2.38);
+
+      // Base mounting flange & bolts
+      const flange = new THREE.Mesh(new THREE.CylinderGeometry(0.14, 0.16, 0.05, 16), materials.darkMetal);
+      flange.position.y = 0.025;
+      group.add(flange);
+
+      // Rear angled support gusset strut (visible in side elevation view)
+      const strut = new THREE.Mesh(new THREE.CylinderGeometry(0.022, 0.022, 0.56, 10), materials.alloy);
+      strut.position.set(0, 0.24, -0.18);
+      strut.rotation.x = 0.62;
+      group.add(strut);
+
+      // Main vertical metallic mast pole
+      const mastPole = new THREE.Mesh(new THREE.CylinderGeometry(0.042, 0.052, 0.92, 16), materials.alloy);
+      mastPole.position.y = 0.48;
+      group.add(mastPole);
+
+      // Upper GPS / Telemetry cap dome
+      const topDome = new THREE.Mesh(new THREE.CylinderGeometry(0.095, 0.08, 0.08, 20), materials.hullWhite);
+      topDome.position.y = 0.96;
+      group.add(topDome);
+
+      const domeRing = new THREE.Mesh(new THREE.TorusGeometry(0.085, 0.012, 8, 24), materials.cyanGlow);
+      domeRing.rotation.x = Math.PI / 2;
+      domeRing.position.y = 0.94;
+      group.add(domeRing);
+
+      // Horizontal T-bar crossbar (matches blueprint top view dual-pod layout)
+      const crossbar = new THREE.Mesh(new THREE.CylinderGeometry(0.024, 0.024, 0.72, 12), materials.darkMetal);
+      crossbar.rotation.z = Math.PI / 2;
+      crossbar.position.set(0, 0.76, 0.04);
+      group.add(crossbar);
+
+      // Build Stereo AI Camera Pods on each end of the crossbar + central optical sensor
+      [-0.32, 0.32].forEach((xOff) => {
+        const pod = new THREE.Group();
+        pod.position.set(xOff, 0.74, 0.12);
+        pod.rotation.x = 0.28; // Angled downward toward forward water & conveyor intake
+
+        // Weatherproof aluminum housing
+        const housing = new THREE.Mesh(new THREE.BoxGeometry(0.13, 0.11, 0.20), materials.hullWhite);
+        pod.add(housing);
+
+        // Sun / rain hood
+        const hood = new THREE.Mesh(new THREE.BoxGeometry(0.145, 0.025, 0.24), materials.darkMetal);
+        hood.position.set(0, 0.055, 0.02);
+        pod.add(hood);
+
+        // Dark glass camera lens barrel
+        const barrel = new THREE.Mesh(new THREE.CylinderGeometry(0.036, 0.042, 0.05, 16), materials.darkMetal);
+        barrel.rotation.x = Math.PI / 2;
+        barrel.position.set(0, 0, 0.11);
+        pod.add(barrel);
+
+        const lens = new THREE.Mesh(
+          new THREE.CircleGeometry(0.03, 16),
+          new THREE.MeshPhysicalMaterial({ color: 0x051022, roughness: 0.05, metalness: 0.4, clearcoat: 1 })
+        );
+        lens.position.set(0, 0, 0.136);
+        pod.add(lens);
+
+        // Glowing cyan AI status LED
+        const led = new THREE.Mesh(new THREE.SphereGeometry(0.012, 8, 8), materials.cyanGlow);
+        led.position.set(0.042, 0.028, 0.102);
+        pod.add(led);
+
+        group.add(pod);
+      });
+
+      // Central forward-facing LiDAR / optical unit
+      const centerCam = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.14, 0.14), materials.darkMetal);
+      centerCam.position.set(0, 0.78, 0.09);
+      centerCam.rotation.x = 0.22;
+      group.add(centerCam);
+
+      const centerLens = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 0.03, 16), materials.cyanGlow);
+      centerLens.rotation.x = Math.PI / 2;
+      centerLens.position.set(0, 0.77, 0.165);
+      group.add(centerLens);
+
+      tagComponent(group, 'cameraMast');
+      return group;
+    }
+
+    // -------------------------------------------------------------------------
+    // COMPONENT 2: FRONT CONVEYOR BELT (WASTE INTAKE)
+    // -------------------------------------------------------------------------
+    function buildConveyorBelt() {
+      const group = new THREE.Group();
+      // Centered in the bow channel, inclined upward from waterline (+Z) into basket
+      const conveyorAssembly = new THREE.Group();
+      conveyorAssembly.position.set(0, 0.34, 3.05);
+      conveyorAssembly.rotation.x = -0.275; // Lower front intake dips into water, upper end rises to discharge
+      group.add(conveyorAssembly);
+
+      const beltLength = 2.75;
+      const beltWidth = 0.86;
+
+      // Side structural metallic rails
+      [-beltWidth / 2 - 0.045, beltWidth / 2 + 0.045].forEach((xRail) => {
+        const rail = new THREE.Mesh(new THREE.BoxGeometry(0.075, 0.20, beltLength + 0.12), materials.alloy);
+        rail.position.set(xRail, 0.02, 0);
+        conveyorAssembly.add(rail);
+
+        // Dark top guard strip
+        const guard = new THREE.Mesh(new THREE.BoxGeometry(0.085, 0.035, beltLength + 0.06), materials.darkMetal);
+        guard.position.set(xRail, 0.13, 0);
+        conveyorAssembly.add(guard);
+      });
+
+      // Main moving rubber belt body
+      const beltMesh = new THREE.Mesh(new THREE.BoxGeometry(beltWidth, 0.09, beltLength), materials.conveyorBelt);
+      conveyorAssembly.add(beltMesh);
+
+      // Lower intake roller & upper drive roller
+      [beltLength / 2, -beltLength / 2].forEach((zEnd) => {
+        const roller = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, beltWidth + 0.04, 18), materials.darkMetal);
+        roller.rotation.z = Math.PI / 2;
+        roller.position.set(0, 0, zEnd);
+        conveyorAssembly.add(roller);
+      });
+
+      // Upper electric drive motor housing (mounted on starboard side of upper roller)
+      const motor = new THREE.Mesh(new THREE.CylinderGeometry(0.085, 0.085, 0.26, 16), materials.hullNavy);
+      motor.rotation.z = Math.PI / 2;
+      motor.position.set(-beltWidth / 2 - 0.20, 0.02, -beltLength / 2 + 0.08);
+      conveyorAssembly.add(motor);
+
+      // Physical 3D chevron cleats that visibly travel up the inclined belt
+      const cleatCount = 10;
+      for (let i = 0; i < cleatCount; i++) {
+        const cleatGroup = new THREE.Group();
+        const t = i / cleatCount;
+
+        // V-shaped cleat bars matching blueprint top view
+        const barL = new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.035, 0.035), materials.darkMetal);
+        barL.position.set(0.18, 0.062, 0.05);
+        barL.rotation.y = -0.32;
+        cleatGroup.add(barL);
+
+        const barR = new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.035, 0.035), materials.darkMetal);
+        barR.position.set(-0.18, 0.062, 0.05);
+        barR.rotation.y = 0.32;
+        cleatGroup.add(barR);
+
+        cleatGroup.userData.phase = t;
+        cleatGroup.userData.length = beltLength - 0.16;
+        conveyorAssembly.add(cleatGroup);
+        animatedProps.conveyorCleats.push(cleatGroup);
+      }
+
+      // Support pivot struts connecting conveyor frame to inner hulls
+      [-0.55, 0.55].forEach((xStrut) => {
+        const pivot = new THREE.Mesh(new THREE.CylinderGeometry(0.032, 0.032, 0.38, 10), materials.alloy);
+        pivot.position.set(xStrut, 0.44, 1.98);
+        pivot.rotation.z = xStrut > 0 ? -0.45 : 0.45;
+        group.add(pivot);
+      });
+
+      tagComponent(group, 'conveyor');
+      return group;
+    }
+
+    // -------------------------------------------------------------------------
+    // COMPONENT 3: FLOATING TRASH COLLECTION BASKET
+    // -------------------------------------------------------------------------
+    function buildTrashBasket() {
+      const group = new THREE.Group();
+      // Located directly behind & beneath the upper discharge end of the conveyor
+      group.position.set(0, 0.16, 1.18);
+
+      const w = 1.24;
+      const h = 0.54;
+      const d = 1.16;
+
+      // Perforated wire-mesh walls (4 sides + bottom)
+      const bottom = new THREE.Mesh(new THREE.PlaneGeometry(w, d), materials.wireMesh);
+      bottom.rotation.x = -Math.PI / 2;
+      bottom.position.y = -h / 2;
+      group.add(bottom);
+
+      const frontWall = new THREE.Mesh(new THREE.PlaneGeometry(w, h), materials.wireMesh);
+      frontWall.position.z = d / 2;
+      group.add(frontWall);
+
+      const backWall = new THREE.Mesh(new THREE.PlaneGeometry(w, h), materials.wireMesh);
+      backWall.position.z = -d / 2;
+      group.add(backWall);
+
+      const leftWall = new THREE.Mesh(new THREE.PlaneGeometry(d, h), materials.wireMesh);
+      leftWall.rotation.y = Math.PI / 2;
+      leftWall.position.x = w / 2;
+      group.add(leftWall);
+
+      const rightWall = new THREE.Mesh(new THREE.PlaneGeometry(d, h), materials.wireMesh);
+      rightWall.rotation.y = Math.PI / 2;
+      rightWall.position.x = -w / 2;
+      group.add(rightWall);
+
+      // Rigid metallic structural frame ribs (top rim, bottom rim, 4 corner posts)
+      const postGeom = new THREE.BoxGeometry(0.045, h + 0.04, 0.045);
+      [[-w / 2, -d / 2], [w / 2, -d / 2], [-w / 2, d / 2], [w / 2, d / 2]].forEach(([px, pz]) => {
+        const post = new THREE.Mesh(postGeom, materials.alloy);
+        post.position.set(px, 0, pz);
+        group.add(post);
+      });
+
+      [-h / 2, h / 2].forEach((py) => {
+        const rimF = new THREE.Mesh(new THREE.BoxGeometry(w + 0.06, 0.045, 0.045), materials.alloy);
+        rimF.position.set(0, py, d / 2);
+        group.add(rimF);
+
+        const rimB = rimF.clone();
+        rimB.position.z = -d / 2;
+        group.add(rimB);
+
+        const rimL = new THREE.Mesh(new THREE.BoxGeometry(0.045, 0.045, d + 0.06), materials.alloy);
+        rimL.position.set(w / 2, py, 0);
+        group.add(rimL);
+
+        const rimR = rimL.clone();
+        rimR.position.x = -w / 2;
+        group.add(rimR);
+      });
+
+      // Floating buoyancy collar pads along sides
+      [-w / 2 - 0.045, w / 2 + 0.045].forEach((xPad) => {
+        const floatPad = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.11, d * 0.85), materials.hullNavy);
+        floatPad.position.set(xPad, -0.14, 0);
+        group.add(floatPad);
+      });
+
+      // Sample collected floating plastic bottles sitting inside the basket
+      const bottleColors = [0x38bdf8, 0x34d399, 0xfbbf24, 0xe2e8f0, 0x60a5fa];
+      const bottleCoords = [
+        [-0.25, -0.18, 0.18, 0.4],
+        [0.22, -0.19, -0.15, -0.8],
+        [0.05, -0.17, 0.28, 1.1],
+        [-0.32, -0.19, -0.26, 2.1],
+        [0.34, -0.18, 0.14, -1.4]
+      ];
+      bottleCoords.forEach(([bx, by, bz, rot], idx) => {
+        const bottle = createPlasticBottleMesh(bottleColors[idx % bottleColors.length]);
+        bottle.position.set(bx, by, bz);
+        bottle.rotation.set(Math.PI / 2, rot, 0.2);
+        group.add(bottle);
+      });
+
+      tagComponent(group, 'basket');
+      return group;
+    }
+
+    // Helper for small realistic 3D plastic bottles
+    function createPlasticBottleMesh(hexColor) {
+      const bottleGroup = new THREE.Group();
+      const mat = new THREE.MeshPhysicalMaterial({
+        color: hexColor,
+        roughness: 0.18,
+        metalness: 0.0,
+        transparent: true,
+        opacity: 0.82,
+        clearcoat: 0.9
+      });
+      const body = new THREE.Mesh(new THREE.CylinderGeometry(0.042, 0.044, 0.18, 12), mat);
+      bottleGroup.add(body);
+
+      const neck = new THREE.Mesh(new THREE.CylinderGeometry(0.018, 0.04, 0.05, 10), mat);
+      neck.position.y = 0.115;
+      bottleGroup.add(neck);
+
+      const cap = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.02, 0.02, 0.022, 10),
+        new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.4 })
+      );
+      cap.position.y = 0.15;
+      bottleGroup.add(cap);
+      return bottleGroup;
+    }
+
+    // -------------------------------------------------------------------------
+    // COMPONENT 4: ROOFTOP SOLAR PANELS (PV ARRAY)
+    // -------------------------------------------------------------------------
+    function buildSolarPanels() {
+      const group = new THREE.Group();
+
+      // Two long parallel rooftop arrays along port (+X) and starboard (-X) superstructure wings
+      function createPVArrayWing(xPos) {
+        const wing = new THREE.Group();
+        wing.position.set(xPos, 0.96, -0.52);
+
+        // Anodized aluminum outer frame
+        const frame = new THREE.Mesh(new THREE.BoxGeometry(0.84, 0.045, 2.74), materials.alloy);
+        wing.add(frame);
+
+        // Reflective dark navy monocrystalline PV surface
+        const pvSurface = new THREE.Mesh(new THREE.BoxGeometry(0.78, 0.014, 2.66), materials.solarGlass);
+        pvSurface.position.y = 0.024;
+        wing.add(pvSurface);
+
+        // Mounting standoffs beneath array
+        [-1.05, 0, 1.05].forEach((zMount) => {
+          const foot = new THREE.Mesh(new THREE.BoxGeometry(0.72, 0.04, 0.06), materials.darkMetal);
+          foot.position.set(0, -0.035, zMount);
+          wing.add(foot);
+        });
+
+        return wing;
+      }
+
+      const portPV = createPVArrayWing(1.06);
+      const stbdPV = createPVArrayWing(-1.06);
+      group.add(portPV, stbdPV);
+
+      animatedProps.solarLeft = portPV;
+      animatedProps.solarRight = stbdPV;
+
+      tagComponent(group, 'solarPanels');
+      return group;
+    }
+
+    // -------------------------------------------------------------------------
+    // COMPONENT 5: CENTRAL ELECTRONICS & BATTERY BAY
+    // -------------------------------------------------------------------------
+    function buildElectronicsBay() {
+      const group = new THREE.Group();
+      group.position.set(0, 0.58, -0.55);
+
+      // Recessed perimeter coaming / housing walls
+      const bayW = 1.18;
+      const bayD = 2.08;
+      const wallH = 0.34;
+
+      const frontWall = new THREE.Mesh(new THREE.BoxGeometry(bayW, wallH, 0.06), materials.darkMetal);
+      frontWall.position.set(0, wallH / 2, bayD / 2);
+      group.add(frontWall);
+
+      const backWall = frontWall.clone();
+      backWall.position.z = -bayD / 2;
+      group.add(backWall);
+
+      [-bayW / 2, bayW / 2].forEach((xW) => {
+        const sideWall = new THREE.Mesh(new THREE.BoxGeometry(0.06, wallH, bayD), materials.darkMetal);
+        sideWall.position.set(xW, wallH / 2, 0);
+        group.add(sideWall);
+      });
+
+      // Internal dark equipment tray
+      const tray = new THREE.Mesh(new THREE.BoxGeometry(bayW - 0.1, 0.04, bayD - 0.1), materials.rubber);
+      tray.position.y = 0.02;
+      group.add(tray);
+
+      // 4 Modular LiFePO4 Battery Packs in 2×2 grid (matching blueprint top view!)
+      const batCoords = [
+        [-0.26, 0.56],
+        [0.26, 0.56],
+        [-0.26, -0.02],
+        [0.26, -0.02]
+      ];
+      batCoords.forEach(([bx, bz]) => {
+        const bat = new THREE.Group();
+        bat.position.set(bx, 0.15, bz);
+
+        const casing = new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.22, 0.46), materials.batteryCase);
+        bat.add(casing);
+
+        // Top label plate
+        const plate = new THREE.Mesh(new THREE.BoxGeometry(0.36, 0.015, 0.38), materials.alloy);
+        plate.position.y = 0.115;
+        bat.add(plate);
+
+        // Positive (red) & Negative (black) terminals
+        const posT = new THREE.Mesh(
+          new THREE.CylinderGeometry(0.022, 0.022, 0.04, 10),
+          new THREE.MeshStandardMaterial({ color: 0xef4444, roughness: 0.3, metalness: 0.5 })
+        );
+        posT.position.set(0.12, 0.135, 0.14);
+        bat.add(posT);
+
+        const negT = new THREE.Mesh(new THREE.CylinderGeometry(0.022, 0.022, 0.04, 10), materials.darkMetal);
+        negT.position.set(-0.12, 0.135, 0.14);
+        bat.add(negT);
+
+        // Battery charge status LED
+        const led = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.015, 0.02), materials.emeraldGlow);
+        led.position.set(0, 0.125, -0.14);
+        bat.add(led);
+
+        group.add(bat);
+      });
+
+      // 2 Autonomy & Power Controller Modules aft of batteries (matching blueprint top view!)
+      [-0.26, 0.26].forEach((cx, idx) => {
+        const ctrlBox = new THREE.Group();
+        ctrlBox.position.set(cx, 0.13, -0.62);
+
+        const pcb = new THREE.Mesh(new THREE.BoxGeometry(0.40, 0.06, 0.42), materials.pcbGreen);
+        ctrlBox.add(pcb);
+
+        // Finned aluminum heatsink
+        const heatsink = new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.10, 0.26), materials.alloy);
+        heatsink.position.y = 0.07;
+        ctrlBox.add(heatsink);
+
+        // Telemetry LED strip
+        const statusLed = new THREE.Mesh(
+          new THREE.BoxGeometry(0.14, 0.02, 0.03),
+          idx === 0 ? materials.cyanGlow : materials.amberGlow
+        );
+        statusLed.position.set(0, 0.05, 0.17);
+        ctrlBox.add(statusLed);
+
+        group.add(ctrlBox);
+      });
+
+      // Power busbar & orange HV conduit cables
+      const busbar = new THREE.Mesh(
+        new THREE.BoxGeometry(0.04, 0.03, 1.55),
+        new THREE.MeshStandardMaterial({ color: 0xf97316, roughness: 0.4, metalness: 0.2 })
+      );
+      busbar.position.set(0, 0.22, 0.02);
+      group.add(busbar);
+
+      // Transparent Tinted Inspection Hatch Cover (lifts extra in Exploded View)
+      const hatchGroup = new THREE.Group();
+      hatchGroup.position.set(0, wallH + 0.02, 0);
+
+      const glassLid = new THREE.Mesh(new THREE.BoxGeometry(bayW - 0.04, 0.028, bayD - 0.04), materials.acrylicCover);
+      hatchGroup.add(glassLid);
+
+      // Hatch perimeter aluminum bezel
+      const bezelF = new THREE.Mesh(new THREE.BoxGeometry(bayW + 0.04, 0.04, 0.06), materials.alloy);
+      bezelF.position.z = bayD / 2;
+      hatchGroup.add(bezelF);
+
+      const bezelB = bezelF.clone();
+      bezelB.position.z = -bayD / 2;
+      hatchGroup.add(bezelB);
+
+      [-bayW / 2, bayW / 2].forEach((bx) => {
+        const bezelS = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.04, bayD + 0.04), materials.alloy);
+        bezelS.position.x = bx;
+        hatchGroup.add(bezelS);
+      });
+
+      group.add(hatchGroup);
+      animatedProps.bayCover = hatchGroup;
+
+      tagComponent(group, 'electronicsBay');
+      return group;
+    }
+
+    // -------------------------------------------------------------------------
+    // COMPONENT 6: REAR SHROUDED THRUSTERS
+    // -------------------------------------------------------------------------
+    function buildRearThrusters() {
+      const group = new THREE.Group();
+
+      [-1.18, 1.18].forEach((xPos, idx) => {
+        const unit = new THREE.Group();
+        unit.position.set(xPos, -0.06, -3.12);
+
+        // Aerodynamic protective Kort nozzle / shroud
+        const shroud = new THREE.Mesh(
+          new THREE.CylinderGeometry(0.24, 0.22, 0.38, 28, 1, true),
+          materials.hullNavy
+        );
+        shroud.rotation.x = Math.PI / 2;
+        shroud.material = materials.hullNavy.clone();
+        shroud.material.side = THREE.DoubleSide;
+        unit.add(shroud);
+
+        // Thick metallic shroud lip rings (fore & aft)
+        [-0.18, 0.18].forEach((zLip) => {
+          const lip = new THREE.Mesh(new THREE.TorusGeometry(0.23, 0.022, 10, 28), materials.alloy);
+          lip.position.z = zLip;
+          unit.add(lip);
+        });
+
+        // Central sealed brushless electric motor housing
+        const motorPod = new THREE.Mesh(new THREE.CylinderGeometry(0.085, 0.075, 0.42, 18), materials.darkMetal);
+        motorPod.rotation.x = Math.PI / 2;
+        motorPod.position.z = 0.04;
+        unit.add(motorPod);
+
+        const noseCone = new THREE.Mesh(new THREE.SphereGeometry(0.085, 16, 12), materials.alloy);
+        noseCone.position.z = 0.24;
+        unit.add(noseCone);
+
+        // 4 Radial stator struts supporting motor pod inside shroud
+        for (let s = 0; s < 4; s++) {
+          const strut = new THREE.Mesh(new THREE.BoxGeometry(0.022, 0.42, 0.06), materials.alloy);
+          strut.rotation.z = (s * Math.PI) / 4;
+          strut.position.z = 0.08;
+          unit.add(strut);
+        }
+
+        // Mounting pylon connecting to hull stern + lower skeg fin (matches side view)
+        const pylon = new THREE.Mesh(new THREE.BoxGeometry(0.07, 0.28, 0.26), materials.darkMetal);
+        pylon.position.set(0, 0.24, 0.06);
+        unit.add(pylon);
+
+        const skeg = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.22, 0.34), materials.hullNavy);
+        skeg.position.set(0, -0.26, 0.16);
+        unit.add(skeg);
+
+        // Animated 4-blade propeller
+        const propGroup = new THREE.Group();
+        propGroup.position.z = -0.10;
+        const hub = new THREE.Mesh(new THREE.CylinderGeometry(0.055, 0.035, 0.10, 14), materials.cyanGlow);
+        hub.rotation.x = Math.PI / 2;
+        propGroup.add(hub);
+
+        for (let b = 0; b < 4; b++) {
+          const bladePivot = new THREE.Group();
+          bladePivot.rotation.z = (b * Math.PI) / 2;
+          const blade = new THREE.Mesh(new THREE.BoxGeometry(0.075, 0.16, 0.015), materials.alloy);
+          blade.position.y = 0.105;
+          blade.rotation.y = 0.45; // Pitch angle
+          bladePivot.add(blade);
+          propGroup.add(bladePivot);
+        }
+
+        propGroup.userData.spinDir = idx === 0 ? 1 : -1;
+        unit.add(propGroup);
+        animatedProps.propellers.push(propGroup);
+
+        group.add(unit);
+      });
+
+      tagComponent(group, 'thrusters');
+      return group;
+    }
+
+    // -------------------------------------------------------------------------
+    // COMPONENT 7: UNDERWATER WATER QUALITY SENSORS (pH, Turbidity, Temp, DO)
+    // -------------------------------------------------------------------------
+    function buildUnderwaterSensors() {
+      const group = new THREE.Group();
+      // Mounted underneath central hull aft of collection basket, extending below waterline (Y < 0)
+      group.position.set(0, -0.02, 0.32);
+
+      // Upper hull-through mounting manifold plate
+      const manifold = new THREE.Mesh(new THREE.CylinderGeometry(0.28, 0.26, 0.12, 20), materials.darkMetal);
+      manifold.position.y = 0.04;
+      group.add(manifold);
+
+      // Vertical deployment column
+      const column = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 0.28, 16), materials.alloy);
+      column.position.y = -0.14;
+      group.add(column);
+
+      // Sensor head block
+      const headBlock = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.22, 0.08, 20), materials.hullNavy);
+      headBlock.position.y = -0.28;
+      group.add(headBlock);
+
+      // 4 Distinct Color-Coded Cylindrical Sensor Probes: pH, Turbidity, Temp, DO
+      const probeSpecs = [
+        { x: -0.10, z: 0.10, mat: materials.emeraldGlow, len: 0.36 }, // pH
+        { x: 0.10, z: 0.10, mat: materials.amberGlow, len: 0.32 },    // Turbidity
+        { x: -0.10, z: -0.10, mat: materials.coralGlow, len: 0.34 },  // Temperature
+        { x: 0.10, z: -0.10, mat: materials.cyanGlow, len: 0.38 }     // Dissolved Oxygen (DO)
+      ];
+
+      probeSpecs.forEach((p) => {
+        const probeBody = new THREE.Mesh(new THREE.CylinderGeometry(0.036, 0.034, p.len, 14), materials.alloy);
+        probeBody.position.set(p.x, -0.28 - p.len / 2, p.z);
+        group.add(probeBody);
+
+        // Glowing underwater sensing ring/tip so probes are legible beneath lake water
+        const tip = new THREE.Mesh(new THREE.CylinderGeometry(0.038, 0.028, 0.075, 14), p.mat);
+        tip.position.set(p.x, -0.28 - p.len - 0.02, p.z);
+        group.add(tip);
+      });
+
+      // Protective stainless-steel guard cage around probes
+      const bottomRing = new THREE.Mesh(new THREE.TorusGeometry(0.24, 0.014, 8, 24), materials.alloy);
+      bottomRing.rotation.x = Math.PI / 2;
+      bottomRing.position.y = -0.72;
+      group.add(bottomRing);
+
+      for (let i = 0; i < 4; i++) {
+        const angle = (i * Math.PI) / 2 + Math.PI / 4;
+        const bar = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.012, 0.46, 8), materials.alloy);
+        bar.position.set(Math.cos(angle) * 0.24, -0.49, Math.sin(angle) * 0.24);
+        group.add(bar);
+      }
+
+      tagComponent(group, 'sensors');
+      return group;
+    }
+
+    // Assemble all 8 components onto boatRoot
+    componentGroups.hull = buildTwinHullAndDeck();
+    componentGroups.cameraMast = buildCameraMast();
+    componentGroups.conveyor = buildConveyorBelt();
+    componentGroups.basket = buildTrashBasket();
+    componentGroups.solarPanels = buildSolarPanels();
+    componentGroups.electronicsBay = buildElectronicsBay();
+    componentGroups.thrusters = buildRearThrusters();
+    componentGroups.sensors = buildUnderwaterSensors();
+
+    // Store base positions for smooth Exploded View interpolation
+    Object.entries(componentGroups).forEach(([id, grp]) => {
+      grp.userData.basePosition = grp.position.clone();
+      boatRoot.add(grp);
+    });
+
+    // =========================================================================
+    // 7. LAKE ENVIRONMENT & CAD STUDIO MODE
+    // =========================================================================
+    const lakeGroup = new THREE.Group();
+    scene.add(lakeGroup);
+
+    // Sky Dome with natural sun & distant lakeside mountains
+    const skyDome = new THREE.Mesh(
+      new THREE.SphereGeometry(95, 36, 24),
+      new THREE.MeshBasicMaterial({ map: createSkyDomeTexture(), side: THREE.BackSide, fog: false })
+    );
+    lakeGroup.add(skyDome);
+
+    // Animated Translucent Lake Surface (Y = 0)
+    const waterGeom = new THREE.PlaneGeometry(140, 140, 88, 88);
+    waterGeom.rotateX(-Math.PI / 2);
+    const waterPosAttr = waterGeom.attributes.position;
+    const waterBaseY = new Float32Array(waterPosAttr.count);
+    for (let i = 0; i < waterPosAttr.count; i++) {
+      waterBaseY[i] = waterPosAttr.getY(i);
+    }
+
+    const waterMat = new THREE.MeshPhysicalMaterial({
+      color: 0x0c6b94,
+      emissive: 0x041e30,
+      emissiveIntensity: 0.35,
+      roughness: 0.14,
+      metalness: 0.08,
+      clearcoat: 1.0,
+      clearcoatRoughness: 0.08,
+      transparent: true,
+      opacity: 0.78,
+      side: THREE.DoubleSide
+    });
+    const waterMesh = new THREE.Mesh(waterGeom, waterMat);
+    waterMesh.receiveShadow = true;
+    lakeGroup.add(waterMesh);
+
+    // Subtle deep lakebed plane so underwater view has realistic depth
+    const lakeBed = new THREE.Mesh(
+      new THREE.CircleGeometry(70, 32),
+      new THREE.MeshStandardMaterial({ color: 0x072033, roughness: 0.95 })
+    );
+    lakeBed.rotation.x = -Math.PI / 2;
+    lakeBed.position.y = -3.8;
+    lakeGroup.add(lakeBed);
+
+    // Floating Lake Trash Objects near front intake (bobbing & drifting toward conveyor)
+    const trashColors = [0x38bdf8, 0xfacc15, 0x34d399, 0xf87171, 0xe2e8f0, 0x60a5fa];
+    for (let i = 0; i < 9; i++) {
+      const isCup = i % 3 === 0;
+      let trashMesh;
+      if (isCup) {
+        trashMesh = new THREE.Mesh(
+          new THREE.CylinderGeometry(0.06, 0.042, 0.12, 12),
+          new THREE.MeshStandardMaterial({ color: trashColors[i % trashColors.length], roughness: 0.35 })
+        );
+      } else {
+        trashMesh = createPlasticBottleMesh(trashColors[i % trashColors.length]);
+      }
+
+      const startZ = 4.6 + (i * 0.52);
+      const startX = (Math.sin(i * 2.1) * 1.15);
+      trashMesh.position.set(startX, -0.01, startZ);
+      trashMesh.rotation.set(Math.PI / 2, i * 0.9, 0.25);
+      trashMesh.userData = {
+        baseX: startX,
+        zMin: 4.35,
+        zMax: 8.8,
+        speed: 0.18 + (i % 3) * 0.05,
+        phase: i * 1.1
+      };
+      lakeGroup.add(trashMesh);
+      animatedProps.floatingTrash.push(trashMesh);
+    }
+
+    // CAD Studio Mode Group (Hidden by default)
+    const cadStudioGroup = new THREE.Group();
+    cadStudioGroup.visible = false;
+    scene.add(cadStudioGroup);
+
+    const gridHelper = new THREE.GridHelper(24, 32, 0x00e5ff, 0x1a3556);
+    gridHelper.position.y = -1.15;
+    cadStudioGroup.add(gridHelper);
+
+    const studioFloor = new THREE.Mesh(
+      new THREE.PlaneGeometry(36, 36),
+      new THREE.MeshStandardMaterial({ color: 0x061020, roughness: 0.85, metalness: 0.15 })
+    );
+    studioFloor.rotation.x = -Math.PI / 2;
+    studioFloor.position.y = -1.16;
+    studioFloor.receiveShadow = true;
+    cadStudioGroup.add(studioFloor);
+
+    // =========================================================================
+    // 8. INTERACTIVE STATE: SELECTION, HIGHLIGHT, EXPLODE, CAMERA PRESETS
+    // =========================================================================
+    const state = {
+      selectedId: null,
+      hoveredId: null,
+      explodeTarget: 0,
+      explodeCurrent: 0,
+      isLakeMode: true,
+      isAnimating: true,
+      visibility: {}
+    };
+    COMPONENT_ORDER.forEach((id) => { state.visibility[id] = true; });
+
+    // Smooth Camera Transition State
+    const camAnim = {
+      active: false,
+      startPos: new THREE.Vector3(),
+      endPos: new THREE.Vector3(),
+      startTarget: new THREE.Vector3(),
+      endTarget: new THREE.Vector3(),
+      progress: 0,
+      duration: 0.72
+    };
+
+    const CAMERA_PRESETS = {
+      iso: { pos: new THREE.Vector3(6.8, 4.4, 7.2), target: new THREE.Vector3(0, 0.35, 0.2) },
+      top: { pos: new THREE.Vector3(0.01, 10.8, 0.35), target: new THREE.Vector3(0, 0.2, 0.35) },
+      front: { pos: new THREE.Vector3(0, 1.85, 9.6), target: new THREE.Vector3(0, 0.45, 0.8) },
+      side: { pos: new THREE.Vector3(9.8, 1.75, 0.3), target: new THREE.Vector3(0, 0.35, 0.3) },
+      rear: { pos: new THREE.Vector3(0, 2.0, -9.2), target: new THREE.Vector3(0, 0.3, -0.5) },
+      underwater: { pos: new THREE.Vector3(3.8, -1.35, 3.2), target: new THREE.Vector3(0, -0.45, 0.35) },
+      reset: { pos: new THREE.Vector3(6.8, 4.4, 7.2), target: new THREE.Vector3(0, 0.35, 0.2) }
+    };
+
+    function flyCameraTo(endPos, endTarget) {
+      camAnim.active = true;
+      camAnim.startPos.copy(camera.position);
+      camAnim.endPos.copy(endPos);
+      camAnim.startTarget.copy(controls.target);
+      camAnim.endTarget.copy(endTarget);
+      camAnim.progress = 0;
+    }
+
+    // Emissive Highlight Management
+    const savedEmissives = new WeakMap();
+    function applyHighlight(compId, intensity) {
+      const grp = componentGroups[compId];
+      if (!grp) return;
+      grp.traverse((child) => {
+        if (child.isMesh && child.material && child.material.emissive) {
+          if (!savedEmissives.has(child)) {
+            savedEmissives.set(child, {
+              mat: child.material,
+              origColor: child.material.emissive.clone(),
+              origIntensity: child.material.emissiveIntensity
+            });
+          }
+          if (intensity > 0) {
+            if (!child.userData.hasClonedMat) {
+              child.material = child.material.clone();
+              child.userData.hasClonedMat = true;
+            }
+            child.material.emissive.setHex(0x00e5ff);
+            child.material.emissiveIntensity = Math.max(savedEmissives.get(child).origIntensity, intensity);
+          } else {
+            const saved = savedEmissives.get(child);
+            if (saved && child.userData.hasClonedMat) {
+              child.material.emissive.copy(saved.origColor);
+              child.material.emissiveIntensity = saved.origIntensity;
+            }
+          }
+        }
+      });
+    }
+
+    function updateAllHighlights() {
+      COMPONENT_ORDER.forEach((id) => {
+        if (id === state.selectedId) {
+          applyHighlight(id, 0.32);
+        } else if (id === state.hoveredId) {
+          applyHighlight(id, 0.16);
+        } else {
+          applyHighlight(id, 0);
+        }
+      });
+    }
+
+    // =========================================================================
+    // 9. UI RENDERING (LEFT COMPONENT LIST & RIGHT INSPECTOR)
+    // =========================================================================
+    const componentListEl = document.getElementById('component-list');
+    const inspectorEl = document.getElementById('inspector-content');
+
+    function eyeIconSVG(isVisible) {
+      if (isVisible) {
+        return `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>`;
+      }
+      return `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg>`;
+    }
+
+    function renderComponentList() {
+      componentListEl.innerHTML = '';
+      COMPONENT_ORDER.forEach((id) => {
+        const info = COMPONENT_DATA[id];
+        const isVis = state.visibility[id];
+        const isActive = state.selectedId === id;
+
+        const item = document.createElement('div');
+        item.className = `comp-item ${isActive ? 'active' : ''} ${!isVis ? 'hidden-comp' : ''}`;
+        item.innerHTML = `
+          <div class="comp-main">
+            <div class="comp-badge">${info.badge}</div>
+            <div class="comp-text">
+              <div class="comp-name">${info.name}</div>
+              <div class="comp-tag">${info.shortTag}</div>
+            </div>
+          </div>
+          <button class="vis-btn ${!isVis ? 'is-hidden' : ''}" type="button" title="${isVis ? 'Hide Component' : 'Show Component'}">
+            ${eyeIconSVG(isVis)}
+          </button>
+        `;
+
+        item.querySelector('.comp-main').addEventListener('click', () => {
+          selectComponent(id, false);
+        });
+
+        item.querySelector('.vis-btn').addEventListener('click', (e) => {
+          e.stopPropagation();
+          toggleComponentVisibility(id);
+        });
+
+        componentListEl.appendChild(item);
+      });
+    }
+
+    function renderInspector() {
+      const info = state.selectedId ? COMPONENT_DATA[state.selectedId] : COMPONENT_DATA.overview;
+      const isSpecific = Boolean(state.selectedId);
+      const isVis = isSpecific ? state.visibility[state.selectedId] : true;
+
+      inspectorEl.innerHTML = `
+        <div class="inspector-ref-row">
+          <span class="ref-chip">${info.ref}</span>
+          <span class="status-chip">${info.status}</span>
+        </div>
+        <div class="inspector-title">${info.name}</div>
+
+        <div class="inspector-section">
+          <div class="inspector-label">Primary Function</div>
+          <div class="inspector-value">${info.functionText}</div>
+        </div>
+
+        <div class="inspector-section">
+          <div class="inspector-label">Engineering Description</div>
+          <div class="inspector-value">${info.description}</div>
+        </div>
+
+        <div class="telemetry-grid">
+          ${info.specs.map((s) => `
+            <div class="telemetry-box">
+              <div class="telemetry-k">${s.k}</div>
+              <div class="telemetry-v">${s.v}</div>
+            </div>
+          `).join('')}
+        </div>
+
+        <div class="inspector-actions">
+          <button id="btn-focus-comp" class="btn-primary" type="button">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/></svg>
+            Focus Camera
+          </button>
+          ${isSpecific ? `
+            <button id="btn-toggle-sel-vis" class="btn-secondary" type="button">
+              ${isVis ? 'Hide' : 'Show'}
+            </button>
+          ` : ''}
+        </div>
+
+        <div class="blueprint-note">
+          Geometry &amp; subsystem layout strictly follow the visual proportions of blueprint drawing <strong>RE-01-A</strong> (Not to Scale).
+        </div>
+      `;
+
+      document.getElementById('btn-focus-comp').addEventListener('click', () => {
+        const expOffset = (isSpecific && info.explodeOffset)
+          ? info.explodeOffset.clone().multiplyScalar(state.explodeCurrent)
+          : new THREE.Vector3();
+        const target = info.focusTarget.clone().add(expOffset);
+        const pos = info.focusOffset.clone().add(expOffset);
+        flyCameraTo(pos, target);
+      });
+
+      const visBtn = document.getElementById('btn-toggle-sel-vis');
+      if (visBtn && isSpecific) {
+        visBtn.addEventListener('click', () => {
+          toggleComponentVisibility(state.selectedId);
+        });
+      }
+    }
+
+    function selectComponent(id, openMobileInspector = false) {
+      state.selectedId = id;
+      updateAllHighlights();
+      renderComponentList();
+      renderInspector();
+      if (openMobileInspector && window.innerWidth <= 860) {
+        document.getElementById('right-panel').classList.add('mobile-open');
+        document.getElementById('left-panel').classList.remove('mobile-open');
+      }
+    }
+
+    function toggleComponentVisibility(id) {
+      state.visibility[id] = !state.visibility[id];
+      componentGroups[id].visible = state.visibility[id];
+      renderComponentList();
+      renderInspector();
+    }
+
+    // =========================================================================
+    // 10. RAYCASTING (3D CLICK TO INSPECT & HOVER TOOLTIP)
+    // =========================================================================
+    const raycaster = new THREE.Raycaster();
+    const pointer = new THREE.Vector2();
+    const tooltipEl = document.getElementById('hover-tooltip');
+    let pointerDownPos = { x: 0, y: 0 };
+
+    function getIntersectedComponent(clientX, clientY) {
+      const rect = renderer.domElement.getBoundingClientRect();
+      pointer.x = ((clientX - rect.left) / rect.width) * 2 - 1;
+      pointer.y = -((clientY - rect.top) / rect.height) * 2 + 1;
+
+      raycaster.setFromCamera(pointer, camera);
+      const visibleGroups = COMPONENT_ORDER
+        .filter((id) => state.visibility[id])
+        .map((id) => componentGroups[id]);
+
+      const hits = raycaster.intersectObjects(visibleGroups, true);
+      if (hits.length > 0) {
+        return hits[0].object.userData.componentId || null;
+      }
+      return null;
+    }
+
+    renderer.domElement.addEventListener('pointerdown', (e) => {
+      pointerDownPos = { x: e.clientX, y: e.clientY };
+      camAnim.active = false; // User takes manual control immediately
+    });
+
+    renderer.domElement.addEventListener('pointermove', (e) => {
+      if (e.pointerType === 'touch') return;
+      const hitId = getIntersectedComponent(e.clientX, e.clientY);
+      if (hitId !== state.hoveredId) {
+        state.hoveredId = hitId;
+        updateAllHighlights();
+      }
+      if (hitId) {
+        renderer.domElement.style.cursor = 'pointer';
+        tooltipEl.textContent = `${COMPONENT_DATA[hitId].ref} • ${COMPONENT_DATA[hitId].name}`;
+        tooltipEl.style.left = `${e.clientX}px`;
+        tooltipEl.style.top = `${e.clientY}px`;
+        tooltipEl.classList.add('visible');
+      } else {
+        renderer.domElement.style.cursor = 'grab';
+        tooltipEl.classList.remove('visible');
+      }
+    });
+
+    renderer.domElement.addEventListener('pointerup', (e) => {
+      const dx = e.clientX - pointerDownPos.x;
+      const dy = e.clientY - pointerDownPos.y;
+      if (Math.hypot(dx, dy) < 6) {
+        const hitId = getIntersectedComponent(e.clientX, e.clientY);
+        if (hitId) {
+          selectComponent(hitId, true);
+        }
+      }
+    });
+
+    // =========================================================================
+    // 11. UI CONTROLS EVENT BINDINGS
+    // =========================================================================
+    // Camera preset buttons
+    const camButtons = document.querySelectorAll('[data-cam]');
+    camButtons.forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const key = btn.dataset.cam;
+        const preset = CAMERA_PRESETS[key];
+        if (!preset) return;
+
+        camButtons.forEach((b) => b.classList.remove('active'));
+        if (key === 'reset') {
+          document.querySelector('[data-cam="iso"]').classList.add('active');
+        } else {
+          btn.classList.add('active');
+        }
+        flyCameraTo(preset.pos, preset.target);
+      });
+    });
+
+    // Exploded View Toggle & Slider
+    const btnExplode = document.getElementById('btn-explode');
+    const explodeSlider = document.getElementById('explode-slider');
+    const explodePct = document.getElementById('explode-pct');
+
+    function setExplodeValue(pct) {
+      const clamped = Math.max(0, Math.min(100, pct));
+      state.explodeTarget = clamped / 100;
+      explodeSlider.value = String(Math.round(clamped));
+      explodePct.textContent = `${Math.round(clamped)}%`;
+      btnExplode.classList.toggle('active', clamped > 0);
+    }
+
+    btnExplode.addEventListener('click', () => {
+      setExplodeValue(state.explodeTarget > 0.1 ? 0 : 100);
+    });
+
+    explodeSlider.addEventListener('input', (e) => {
+      setExplodeValue(Number(e.target.value));
+    });
+
+    // Environment Mode Toggle (Lake Simulation vs CAD Studio)
+    const btnEnv = document.getElementById('btn-env');
+    btnEnv.addEventListener('click', () => {
+      state.isLakeMode = !state.isLakeMode;
+      lakeGroup.visible = state.isLakeMode;
+      cadStudioGroup.visible = !state.isLakeMode;
+      scene.fog = state.isLakeMode
+        ? new THREE.FogExp2(0x132c47, 0.014)
+        : new THREE.FogExp2(0x050c19, 0.018);
+      btnEnv.textContent = state.isLakeMode ? 'Lake Sim' : 'CAD Studio';
+      btnEnv.classList.toggle('active', state.isLakeMode);
+    });
+
+    // Animation Play / Pause Toggle
+    const btnAnim = document.getElementById('btn-anim');
+    btnAnim.addEventListener('click', () => {
+      state.isAnimating = !state.isAnimating;
+      btnAnim.textContent = state.isAnimating ? 'Animating' : 'Paused';
+      btnAnim.classList.toggle('active', state.isAnimating);
+    });
+
+    // Show All & Overview buttons
+    document.getElementById('btn-show-all').addEventListener('click', () => {
+      COMPONENT_ORDER.forEach((id) => {
+        state.visibility[id] = true;
+        componentGroups[id].visible = true;
+      });
+      renderComponentList();
+      renderInspector();
+    });
+
+    document.getElementById('btn-clear-selection').addEventListener('click', () => {
+      selectComponent(null, false);
+    });
+
+    // Mobile panel drawer toggles
+    const leftPanel = document.getElementById('left-panel');
+    const rightPanel = document.getElementById('right-panel');
+    document.getElementById('btn-mobile-left').addEventListener('click', () => {
+      leftPanel.classList.toggle('mobile-open');
+      rightPanel.classList.remove('mobile-open');
+    });
+    document.getElementById('btn-mobile-right').addEventListener('click', () => {
+      rightPanel.classList.toggle('mobile-open');
+      leftPanel.classList.remove('mobile-open');
+    });
+
+    // Resize Handling
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+
+    // =========================================================================
+    // 12. MAIN ANIMATION LOOP
+    // =========================================================================
+    const clock = new THREE.Clock();
+    let simTime = 0;
+
+    function animate() {
+      requestAnimationFrame(animate);
+      const dt = Math.min(clock.getDelta(), 0.05);
+
+      if (state.isAnimating) {
+        simTime += dt;
+
+        // 1. Animate translucent lake surface waves
+        if (state.isLakeMode) {
+          for (let i = 0; i < waterPosAttr.count; i++) {
+            const wx = waterPosAttr.getX(i);
+            const wz = waterPosAttr.getZ(i);
+            const wave =
+              Math.sin(wx * 0.48 + simTime * 1.45) * 0.032 +
+              Math.cos(wz * 0.55 + simTime * 1.15) * 0.028 +
+              Math.sin((wx + wz) * 0.28 - simTime * 0.9) * 0.018;
+            waterPosAttr.setY(i, waterBaseY[i] + wave);
+          }
+          waterPosAttr.needsUpdate = true;
+          waterGeom.computeVertexNormals();
+        }
+
+        // 2. Gentle catamaran buoyancy bobbing & pitch/roll (stabilized when exploded or in CAD mode)
+        const buoyancyFactor = state.isLakeMode ? (1 - state.explodeCurrent * 0.85) : 0;
+        boatRoot.position.y = Math.sin(simTime * 1.35) * 0.038 * buoyancyFactor;
+        boatRoot.rotation.z = Math.sin(simTime * 0.95) * 0.016 * buoyancyFactor;
+        boatRoot.rotation.x = Math.cos(simTime * 1.15) * 0.012 * buoyancyFactor;
+
+        // 3. Spin rear shrouded thruster propellers
+        animatedProps.propellers.forEach((prop) => {
+          prop.rotation.z += dt * 11.5 * prop.userData.spinDir;
+        });
+
+        // 4. Animate front conveyor belt texture & physical chevron cleats moving upward
+        materials.conveyorBelt.map.offset.y -= dt * 0.42;
+        animatedProps.conveyorCleats.forEach((cleat) => {
+          cleat.userData.phase = (cleat.userData.phase + dt * 0.24) % 1;
+          const halfLen = cleat.userData.length / 2;
+          // Move from front intake (+halfLen) to rear discharge (-halfLen)
+          cleat.position.z = halfLen - cleat.userData.phase * cleat.userData.length;
+        });
+
+        // 5. Bob and gently drift floating lake trash toward the front conveyor intake
+        if (state.isLakeMode) {
+          animatedProps.floatingTrash.forEach((trash) => {
+            trash.position.z -= dt * trash.userData.speed;
+            if (trash.position.z < trash.userData.zMin) {
+              trash.position.z = trash.userData.zMax;
+            }
+            trash.position.y = -0.01 + Math.sin(simTime * 2.1 + trash.userData.phase) * 0.025;
+            trash.rotation.z = 0.25 + Math.sin(simTime * 1.4 + trash.userData.phase) * 0.14;
+            trash.position.x = trash.userData.baseX * ((trash.position.z - 3.8) / 5.0);
+          });
+        }
+      }
+
+      // 6. Smooth Exploded View Interpolation
+      if (Math.abs(state.explodeCurrent - state.explodeTarget) > 0.0005) {
+        state.explodeCurrent += (state.explodeTarget - state.explodeCurrent) * Math.min(1, dt * 7.5);
+      } else {
+        state.explodeCurrent = state.explodeTarget;
+      }
+
+      const exp = state.explodeCurrent;
+      COMPONENT_ORDER.forEach((id) => {
+        const grp = componentGroups[id];
+        const offset = COMPONENT_DATA[id].explodeOffset;
+        if (grp && offset) {
+          grp.position.copy(grp.userData.basePosition).addScaledVector(offset, exp);
+        }
+      });
+
+      // Extra sub-assembly explosion: spread twin solar wings outward & lift transparent bay hatch
+      if (animatedProps.solarLeft && animatedProps.solarRight) {
+        animatedProps.solarLeft.position.x = 1.06 + exp * 0.65;
+        animatedProps.solarRight.position.x = -1.06 - exp * 0.65;
+      }
+      if (animatedProps.bayCover) {
+        animatedProps.bayCover.position.y = 0.36 + exp * 0.72;
+      }
+
+      // 7. Smooth Camera Preset Interpolation (Cubic Ease-Out)
+      if (camAnim.active) {
+        camAnim.progress += dt / camAnim.duration;
+        const t = Math.min(1, camAnim.progress);
+        const ease = 1 - Math.pow(1 - t, 3);
+        camera.position.lerpVectors(camAnim.startPos, camAnim.endPos, ease);
+        controls.target.lerpVectors(camAnim.startTarget, camAnim.endTarget, ease);
+        if (t >= 1) camAnim.active = false;
+      }
+
+      controls.update();
+      renderer.render(scene, camera);
+    }
+
+    // =========================================================================
+    // 13. INITIALIZE UI & START RENDERING ON LOAD
+    // =========================================================================
+    renderComponentList();
+    renderInspector();
+
+    window.addEventListener('load', () => {
+      animate();
+      setTimeout(() => {
+        document.getElementById('loading-overlay').classList.add('hidden');
+      }, 320);
+    });
+
+    // Fallback in case load event already fired before module execution
+    if (document.readyState === 'complete') {
+      animate();
+      setTimeout(() => {
+        document.getElementById('loading-overlay').classList.add('hidden');
+      }, 320);
+    }
+  </script>
+</body>
+</html>
